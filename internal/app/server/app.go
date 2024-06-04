@@ -9,6 +9,7 @@ import (
 	"github.com/webkimru/go-keeper/pkg/grpcserver"
 	"github.com/webkimru/go-keeper/pkg/jwtmanager"
 	"github.com/webkimru/go-keeper/pkg/logger"
+	"google.golang.org/grpc/reflection"
 	"log"
 	"os"
 	"os/signal"
@@ -39,6 +40,7 @@ func Run(cfg *config.Config) {
 	l.Log.Infof("Starting gRPC server on %s", cfg.GRPC.Address)
 	grpcServer, err := grpcserver.New(cfg.GRPC.Address)
 	pb.RegisterUserServiceServer(grpcServer.Reg(), userServer)
+	reflection.Register(grpcServer.Reg())
 
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)
