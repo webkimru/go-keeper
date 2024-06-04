@@ -2,12 +2,13 @@ package grpc
 
 import (
 	"context"
-	"github.com/webkimru/go-keeper/internal/app/server/models"
-	"github.com/webkimru/go-keeper/pkg/jwtmanager"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/webkimru/go-keeper/internal/app/server/api/grpc/proto"
+	"github.com/webkimru/go-keeper/internal/app/server/models"
+	"github.com/webkimru/go-keeper/pkg/jwtmanager"
 )
 
 // UserService is an interface to store users.
@@ -33,17 +34,32 @@ func NewUserServer(userService UserService, jwtManager *jwtmanager.JWTManager) *
 func (s *UserServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
 	user, err := s.userService.Find(ctx, in.GetLogin())
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "UserServer - s.userService.Find(): %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "Unauthenticated", err)
 	}
 
 	if user == nil || !user.ValidPassword(in.GetPassword()) {
-		return nil, status.Errorf(codes.Unauthenticated, "UserServer - wrong login or password user.ValidPassword()")
+		return nil, status.Errorf(codes.Unauthenticated, "Unauthenticated")
 	}
 
 	token, err := s.jwtManager.BuildJWTString(user.ID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "UserServer - can't build a new token s.jwtManager.BuildJWTString()")
+		return nil, status.Errorf(codes.Internal, "Internal Server Error")
 	}
 
 	return &pb.LoginResponse{AccessToken: token}, nil
+}
+
+func (s *UserServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+	var response pb.RegisterResponse
+
+	user := &models.User{
+		Login:    in.GetLogin(),
+		Password: in.GetPassword(),
+	}
+	err := s.userService.Add(ctx, user)
+	if err != nil {
+		response.Error = "User already exists"
+	}
+
+	return &response, nil
 }
