@@ -36,8 +36,9 @@ func Run(cfg *config.Config) {
 	userServer := apigrpc.NewUserServer(userService, jwtManager)
 
 	// gRPC server
+	l.Log.Infof("Starting gRPC server on %s", cfg.GRPC.Address)
 	grpcServer, err := grpcserver.New(cfg.GRPC.Address)
-	pb.RegisterUserServiceServer(grpcServer, userServer)
+	pb.RegisterUserServiceServer(grpcServer.Reg(), userServer)
 
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)
@@ -52,7 +53,5 @@ func Run(cfg *config.Config) {
 	}
 
 	// Shutdown
-	if err := grpcServer.GracefulStop; err != nil {
-		l.Log.Errorf("grpcServer.GracefulStop: %v", err)
-	}
+	grpcServer.Shutdown()
 }
