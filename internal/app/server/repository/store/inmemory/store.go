@@ -25,7 +25,7 @@ func (s *Storage) Add(ctx context.Context, user *models.User) error {
 
 	_, exist := s.users[user.Login]
 	if exist {
-		return fmt.Errorf("user already exists")
+		return fmt.Errorf("Storage - user already exists")
 	}
 
 	s.users[user.Login] = user
@@ -40,7 +40,7 @@ func (s *Storage) Find(ctx context.Context, login string) (*models.User, error) 
 
 	_, exist := s.users[login]
 	if !exist {
-		return nil, fmt.Errorf("user is not found")
+		return nil, fmt.Errorf("Storage - user is not found")
 	}
 
 	return s.users[login], nil

@@ -33,16 +33,16 @@ func NewUserServer(userService UserService, jwtManager *jwtmanager.JWTManager) *
 func (s *UserServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
 	user, err := s.userService.Find(ctx, in.GetLogin())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "auth server: can't find user: %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "UserServer - s.userService.Find(): %v", err)
 	}
 
 	if user == nil || !user.ValidPassword(in.GetPassword()) {
-		return nil, status.Errorf(codes.Unauthenticated, "auth server: wrong login or password")
+		return nil, status.Errorf(codes.Unauthenticated, "UserServer - wrong login or password user.ValidPassword()")
 	}
 
 	token, err := s.jwtManager.BuildJWTString(user.ID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "auth server: can't build a new token")
+		return nil, status.Errorf(codes.Internal, "UserServer - can't build a new token s.jwtManager.BuildJWTString()")
 	}
 
 	return &pb.LoginResponse{AccessToken: token}, nil

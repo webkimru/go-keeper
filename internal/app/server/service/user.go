@@ -25,7 +25,7 @@ func NewUserService(storage UserStore) *UserService {
 // Add puts a user to the storage.
 func (s *UserService) Add(ctx context.Context, user *models.User) error {
 	if err := s.storage.Add(ctx, user); err != nil {
-		return fmt.Errorf("user service Add(): %w", err)
+		return fmt.Errorf("UserService - s.storage.Add(): %w", err)
 	}
 
 	return nil
@@ -35,7 +35,7 @@ func (s *UserService) Add(ctx context.Context, user *models.User) error {
 func (s *UserService) Find(ctx context.Context, login string) (*models.User, error) {
 	user, err := s.storage.Find(ctx, login)
 	if err != nil {
-		return nil, fmt.Errorf("user service Find(): %w", err)
+		return nil, fmt.Errorf("UserService - s.storage.Find(): %w", err)
 	}
 
 	return user, nil
