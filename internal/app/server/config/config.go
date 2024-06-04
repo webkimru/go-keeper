@@ -9,11 +9,22 @@ import (
 type (
 	// Config is an application configuration structure.
 	Config struct {
-		Log `json:"logger"`
+		App  `json:"app"`
+		Log  `json:"logger"`
+		GRPC `json:"grpc"`
+	}
+
+	App struct {
+		SecretKey string `json:"secret_key" env:"APP_SECRET_KEY" env-default:"secret"`
+		TokenExp  int    `json:"token_exp" env:"APP_TOKEN_EXP" env-default:"120" env-description:"token expiration (minutes)"`
 	}
 
 	Log struct {
 		Level string `json:"log_level" env:"LOG_LEVEL" env-default:"info"`
+	}
+
+	GRPC struct {
+		Address string `json:"grpc_address" env:"GRPC_ADDRESS" env-default:":3200"`
 	}
 )
 

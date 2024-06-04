@@ -7,7 +7,7 @@ import (
 	"runtime"
 )
 
-const appName = "GophKeeper"
+const appName = "GophKeeper Server"
 
 var (
 	buildVersion string = "N/A"
@@ -17,7 +17,7 @@ var (
 
 func main() {
 	log.Printf("******************************************")
-	log.Printf("** %sGophKeeper%s built in %s", "\033[31m", "\033[0m", runtime.Version())
+	log.Printf("** %s%s%s built in %s", "\033[31m", appName, "\033[0m", runtime.Version())
 	log.Printf("**----------------------------------------")
 	log.Printf("** Running with %d Processors", runtime.NumCPU())
 	log.Printf("** Running on %s", runtime.GOOS)
