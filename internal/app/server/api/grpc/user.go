@@ -2,7 +2,8 @@ package grpc
 
 import (
 	"context"
-
+	"errors"
+	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -10,6 +11,8 @@ import (
 	"github.com/webkimru/go-keeper/internal/app/server/models"
 	"github.com/webkimru/go-keeper/pkg/jwtmanager"
 )
+
+var ErrAlreadyExists = errors.New("user already exists")
 
 // UserService is an interface to store users.
 type UserService interface {
@@ -34,7 +37,7 @@ func NewUserServer(userService UserService, jwtManager *jwtmanager.JWTManager) *
 func (s *UserServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
 	user, err := s.userService.Find(ctx, in.GetLogin())
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "Unauthenticated", err)
+		return nil, status.Errorf(codes.Unauthenticated, "Unauthenticated: %v", err)
 	}
 
 	if user == nil || !user.ValidPassword(in.GetPassword()) {
@@ -58,7 +61,7 @@ func (s *UserServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.
 	}
 	err := s.userService.Add(ctx, user)
 	if err != nil {
-		response.Error = "User already exists"
+		response.Error = fmt.Sprintf("%v", ErrAlreadyExists)
 	}
 
 	return &response, nil
