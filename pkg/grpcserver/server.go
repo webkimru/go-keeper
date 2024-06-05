@@ -12,13 +12,13 @@ type Server struct {
 }
 
 // New returns a new gRPC server.
-func New(address string) (*Server, error) {
+func New(address string, option ...grpc.ServerOption) (*Server, error) {
 	listen, err := net.Listen("tcp", address)
 	if err != nil {
 		return nil, err
 	}
 
-	s := &Server{server: grpc.NewServer()}
+	s := &Server{server: grpc.NewServer(option...)}
 	s.Start(listen)
 
 	return s, nil

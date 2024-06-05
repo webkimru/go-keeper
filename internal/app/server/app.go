@@ -1,7 +1,16 @@
 package server
 
 import (
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
 	apigrpc "github.com/webkimru/go-keeper/internal/app/server/api/grpc"
+	"github.com/webkimru/go-keeper/internal/app/server/api/grpc/middleware"
 	pb "github.com/webkimru/go-keeper/internal/app/server/api/grpc/proto"
 	"github.com/webkimru/go-keeper/internal/app/server/config"
 	"github.com/webkimru/go-keeper/internal/app/server/repository/store/inmemory"
@@ -9,11 +18,6 @@ import (
 	"github.com/webkimru/go-keeper/pkg/grpcserver"
 	"github.com/webkimru/go-keeper/pkg/jwtmanager"
 	"github.com/webkimru/go-keeper/pkg/logger"
-	"google.golang.org/grpc/reflection"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 // Run runs application.
@@ -38,7 +42,11 @@ func Run(cfg *config.Config) {
 
 	// gRPC server
 	l.Log.Infof("Starting gRPC server on %s", cfg.GRPC.Address)
-	grpcServer, err := grpcserver.New(cfg.GRPC.Address)
+	interceptor := middleware.NewAuthInterceptor(jwtManager)
+	serverOptions := []grpc.ServerOption{
+		grpc.UnaryInterceptor(interceptor.UnaryAuthInterceptor),
+	}
+	grpcServer, err := grpcserver.New(cfg.GRPC.Address, serverOptions...)
 	pb.RegisterUserServiceServer(grpcServer.Reg(), userServer)
 	reflection.Register(grpcServer.Reg())
 
