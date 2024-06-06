@@ -37,11 +37,11 @@ func NewUserServer(userService UserService, jwtManager *jwtmanager.JWTManager) *
 func (s *UserServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
 	user, err := s.userService.Find(ctx, in.GetLogin())
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "Unauthenticated: %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "Unauthenticated: can't find user")
 	}
 
 	if user == nil || !user.ValidPassword(in.GetPassword()) {
-		return nil, status.Errorf(codes.Unauthenticated, "Unauthenticated")
+		return nil, status.Errorf(codes.Unauthenticated, "Unauthenticated: wrong user or password")
 	}
 
 	token, err := s.jwtManager.BuildJWTString(user.ID)
