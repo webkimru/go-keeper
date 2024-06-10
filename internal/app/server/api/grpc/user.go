@@ -2,17 +2,15 @@ package grpc
 
 import (
 	"context"
-	"errors"
-	"fmt"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/webkimru/go-keeper/internal/app/server/api/grpc/proto"
+	"github.com/webkimru/go-keeper/internal/app/server/api/grpc/pb"
 	"github.com/webkimru/go-keeper/internal/app/server/models"
+	"github.com/webkimru/go-keeper/pkg/errs"
 	"github.com/webkimru/go-keeper/pkg/jwtmanager"
 )
-
-var ErrAlreadyExists = errors.New("user already exists")
 
 // UserService is an interface to store users.
 type UserService interface {
@@ -37,16 +35,16 @@ func NewUserServer(userService UserService, jwtManager *jwtmanager.JWTManager) *
 func (s *UserServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
 	user, err := s.userService.Find(ctx, in.GetLogin())
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "Unauthenticated: can't find user")
+		return nil, status.Errorf(codes.Unauthenticated, errs.MsgNotFound)
 	}
 
 	if user == nil || !user.ValidPassword(in.GetPassword()) {
-		return nil, status.Errorf(codes.Unauthenticated, "Unauthenticated: wrong user or password")
+		return nil, status.Errorf(codes.Unauthenticated, errs.MsgInvalidCred)
 	}
 
 	token, err := s.jwtManager.BuildJWTString(user.ID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Internal Server Error")
+		return nil, status.Errorf(codes.Internal, errs.MsgInternalServer)
 	}
 
 	return &pb.LoginResponse{AccessToken: token}, nil
@@ -61,7 +59,7 @@ func (s *UserServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.
 	}
 	err := s.userService.Add(ctx, user)
 	if err != nil {
-		response.Error = fmt.Sprintf("%v", ErrAlreadyExists)
+		response.Error = errs.MsgAlreadyExists
 	}
 
 	return &response, nil

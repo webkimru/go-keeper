@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package kim.gokeeper;
 
-option go_package = "/proto";
+option go_package = ".;pb";
 
 message LoginRequest {
   string login = 1;

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package kim.gokeeper;
+
+option go_package = ".;pb";
+
+import "gokeeper_data_keyvalue.proto";
+
+service KeyValueService {
+  rpc AddKeyValue(AddKeyValueRequest) returns (AddKeyValueResponse);
+  rpc GetKeyValue(GetKeyValueRequest) returns (GetKeyValueResponse);
+  rpc ListKeyValue(ListKeyValueRequest) returns (ListKeyValueResponse);
+  rpc DelKeyValue(DelKeyValueRequest) returns (DelKeyValueResponse);
+}
+

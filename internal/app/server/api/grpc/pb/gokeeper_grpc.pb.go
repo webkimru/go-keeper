@@ -4,7 +4,7 @@
 // - protoc             v3.20.2
 // source: gokeeper.proto
 
-package proto
+package pb
 
 import (
 	context "context"

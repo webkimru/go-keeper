@@ -28,6 +28,7 @@ func (s *Storage) Add(ctx context.Context, user *models.User) error {
 		return fmt.Errorf("Storage - Add - user already exists")
 	}
 
+	user.ID = int64(len(s.users)) + 1
 	s.users[user.Login] = user
 
 	return nil

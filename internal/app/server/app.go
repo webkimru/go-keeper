@@ -11,7 +11,7 @@ import (
 
 	apigrpc "github.com/webkimru/go-keeper/internal/app/server/api/grpc"
 	"github.com/webkimru/go-keeper/internal/app/server/api/grpc/middleware"
-	pb "github.com/webkimru/go-keeper/internal/app/server/api/grpc/proto"
+	"github.com/webkimru/go-keeper/internal/app/server/api/grpc/pb"
 	"github.com/webkimru/go-keeper/internal/app/server/config"
 	"github.com/webkimru/go-keeper/internal/app/server/repository/store/inmemory"
 	"github.com/webkimru/go-keeper/internal/app/server/service"
@@ -39,6 +39,10 @@ func Run(cfg *config.Config) {
 	userService := service.NewUserService(db)
 	jwtManager := jwtmanager.New(cfg.SecretKey, cfg.TokenExp)
 	userServer := apigrpc.NewUserServer(userService, jwtManager)
+	// data: key-value store and service
+	dbKeyValue := inmemory.NewStorageKeyValue()
+	keyValueService := service.NewKeyValueService(dbKeyValue)
+	keyValueServer := apigrpc.NewKeyValueServer(keyValueService)
 
 	// gRPC server
 	l.Log.Infof("Starting gRPC server on %s", cfg.GRPC.Address)
@@ -48,6 +52,7 @@ func Run(cfg *config.Config) {
 	}
 	grpcServer, err := grpcserver.New(cfg.GRPC.Address, serverOptions...)
 	pb.RegisterUserServiceServer(grpcServer.Reg(), userServer)
+	pb.RegisterKeyValueServiceServer(grpcServer.Reg(), keyValueServer)
 	reflection.Register(grpcServer.Reg())
 
 	// Waiting signal

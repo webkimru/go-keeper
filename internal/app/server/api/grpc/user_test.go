@@ -2,16 +2,18 @@ package grpc
 
 import (
 	"context"
-	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
-	pb "github.com/webkimru/go-keeper/internal/app/server/api/grpc/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"github.com/webkimru/go-keeper/internal/app/server/api/grpc/pb"
 	"github.com/webkimru/go-keeper/internal/app/server/models"
 	"github.com/webkimru/go-keeper/internal/app/server/repository/store/inmemory"
 	"github.com/webkimru/go-keeper/internal/app/server/service"
+	"github.com/webkimru/go-keeper/pkg/errs"
 	"github.com/webkimru/go-keeper/pkg/jwtmanager"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"testing"
 )
 
 func TestUserServer_Register(t *testing.T) {
@@ -41,7 +43,7 @@ func TestUserServer_Register(t *testing.T) {
 				Password: "test",
 			},
 			codes.OK,
-			&pb.RegisterResponse{Error: fmt.Sprintf("%v", ErrAlreadyExists)},
+			&pb.RegisterResponse{Error: errs.MsgAlreadyExists},
 		},
 	}
 	for _, tt := range tests {
