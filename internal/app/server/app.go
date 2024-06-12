@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -48,7 +49,10 @@ func Run(cfg *config.Config) {
 	l.Log.Infof("Starting gRPC server on %s", cfg.GRPC.Address)
 	interceptor := middleware.NewAuthInterceptor(jwtManager)
 	serverOptions := []grpc.ServerOption{
-		grpc.UnaryInterceptor(interceptor.UnaryAuthInterceptor),
+		grpc.ChainUnaryInterceptor(
+			logging.UnaryServerInterceptor(middleware.InterceptorLogger(l)),
+			interceptor.UnaryAuthInterceptor,
+		),
 	}
 	grpcServer, err := grpcserver.New(cfg.GRPC.Address, serverOptions...)
 	pb.RegisterUserServiceServer(grpcServer.Reg(), userServer)
