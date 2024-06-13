@@ -3,6 +3,8 @@ package grpc
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -33,6 +35,7 @@ func NewKeyValueServer(keyValueService KeyValueService) *KeyValueServer {
 	return &KeyValueServer{keyValueService: keyValueService}
 }
 
+// AddKeyValue saves key-value to the store.
 func (s *KeyValueServer) AddKeyValue(ctx context.Context, in *pb.AddKeyValueRequest) (*pb.AddKeyValueResponse, error) {
 	data := &models.KeyValue{
 		UserID: (ctx.Value("userID")).(int64),
@@ -45,6 +48,9 @@ func (s *KeyValueServer) AddKeyValue(ctx context.Context, in *pb.AddKeyValueRequ
 		if errors.Is(err, errs.ErrAlreadyExists) {
 			return nil, status.Errorf(codes.AlreadyExists, errs.MsgAlreadyExists)
 		}
+		if errors.Is(err, errs.ErrBadRequest) {
+			return nil, status.Errorf(codes.InvalidArgument, s.fieldMessage(errs.MsgFieldRequired, err))
+		}
 
 		return nil, status.Errorf(codes.Internal, errs.MsgInternalServer)
 	}
@@ -52,6 +58,7 @@ func (s *KeyValueServer) AddKeyValue(ctx context.Context, in *pb.AddKeyValueRequ
 	return nil, nil
 }
 
+// GetKeyValue get key-value from the store.
 func (s *KeyValueServer) GetKeyValue(ctx context.Context, in *pb.GetKeyValueRequest) (*pb.GetKeyValueResponse, error) {
 	data, err := s.keyValueService.Get(ctx, in.GetId())
 	if err != nil {
@@ -69,4 +76,15 @@ func (s *KeyValueServer) GetKeyValue(ctx context.Context, in *pb.GetKeyValueRequ
 			Value: data.Value,
 		},
 	}, nil
+}
+
+// fieldMessage do user-friendly errors of form fields.
+//
+//	example: field key is required
+//	example: field value is required
+//	instead: field is required
+func (s *KeyValueServer) fieldMessage(mess string, err error) string {
+	field := strings.Split(err.Error(), ":")
+
+	return strings.Replace(mess, "field", fmt.Sprintf("field %s", field[0]), 1)
 }

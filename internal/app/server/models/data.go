@@ -11,15 +11,15 @@ type KeyValue struct {
 	CreatedAt string
 }
 
-func (k *KeyValue) Validate() error {
+func (k *KeyValue) Validate() (string, error) {
 	if err := k.required(k.Key); err != nil {
-		return err
+		return "key", err
 	}
 	if err := k.required(k.Value); err != nil {
-		return err
+		return "value", err
 	}
 
-	return nil
+	return "", nil
 }
 
 func (k *KeyValue) required(field string) error {

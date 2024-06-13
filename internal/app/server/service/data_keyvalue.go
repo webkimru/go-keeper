@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/webkimru/go-keeper/pkg/errs"
 
 	"github.com/webkimru/go-keeper/internal/app/server/models"
 	"github.com/webkimru/go-keeper/pkg/crypt"
@@ -30,8 +31,8 @@ func NewKeyValueService(storage KeyValueStore, cryptManager *crypt.Crypt) *KeyVa
 
 // Add puts data to the storage.
 func (s *KeyValueService) Add(ctx context.Context, model models.KeyValue) error {
-	if err := model.Validate(); err != nil {
-		return fmt.Errorf("KeyValueService - Add - Validate(): %w", err)
+	if field, err := model.Validate(); err != nil {
+		return fmt.Errorf("%s: %w", field, errs.ErrBadRequest)
 	}
 
 	// encrypt
