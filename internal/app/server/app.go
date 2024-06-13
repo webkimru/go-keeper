@@ -16,6 +16,7 @@ import (
 	"github.com/webkimru/go-keeper/internal/app/server/config"
 	"github.com/webkimru/go-keeper/internal/app/server/repository/store/inmemory"
 	"github.com/webkimru/go-keeper/internal/app/server/service"
+	"github.com/webkimru/go-keeper/pkg/crypt"
 	"github.com/webkimru/go-keeper/pkg/grpcserver"
 	"github.com/webkimru/go-keeper/pkg/jwtmanager"
 	"github.com/webkimru/go-keeper/pkg/logger"
@@ -42,7 +43,11 @@ func Run(cfg *config.Config) {
 	userServer := apigrpc.NewUserServer(userService, jwtManager)
 	// data: key-value store and service
 	dbKeyValue := inmemory.NewStorageKeyValue()
-	keyValueService := service.NewKeyValueService(dbKeyValue)
+	cryptManager, err := crypt.New(cfg.SecretKey)
+	if err != nil {
+		l.Log.Error(err)
+	}
+	keyValueService := service.NewKeyValueService(dbKeyValue, cryptManager)
 	keyValueServer := apigrpc.NewKeyValueServer(keyValueService)
 
 	// gRPC server
