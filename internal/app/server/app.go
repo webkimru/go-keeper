@@ -6,20 +6,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
-
-	apigrpc "github.com/webkimru/go-keeper/internal/app/server/api/grpc"
-	"github.com/webkimru/go-keeper/internal/app/server/api/grpc/middleware"
-	"github.com/webkimru/go-keeper/internal/app/server/api/grpc/pb"
+	"github.com/webkimru/go-keeper/internal/app/server/api/grpc"
 	"github.com/webkimru/go-keeper/internal/app/server/config"
-	"github.com/webkimru/go-keeper/internal/app/server/repository/store/inmemory"
+	"github.com/webkimru/go-keeper/internal/app/server/repository/store/pg"
 	"github.com/webkimru/go-keeper/internal/app/server/service"
 	"github.com/webkimru/go-keeper/pkg/crypt"
-	"github.com/webkimru/go-keeper/pkg/grpcserver"
 	"github.com/webkimru/go-keeper/pkg/jwtmanager"
 	"github.com/webkimru/go-keeper/pkg/logger"
+	"github.com/webkimru/go-keeper/pkg/postgres"
 )
 
 // Run runs application.
@@ -34,35 +28,38 @@ func Run(cfg *config.Config) {
 		"APP_TOKEN_EXP", cfg.TokenExp,
 		"LOG_LEVEL", cfg.Log.Level,
 		"GRPC_ADDRESS", cfg.GRPC.Address,
+		"DATABASE_DSN", cfg.PG.DatabaseDSN,
+		"MIGRATION_VERSION", cfg.PG.MigrationVersion,
 	)
 
-	// App DI init
-	db := inmemory.NewStorage()
-	userService := service.NewUserService(db)
-	jwtManager := jwtmanager.New(cfg.SecretKey, cfg.TokenExp)
-	userServer := apigrpc.NewUserServer(userService, jwtManager)
-	// data: key-value store and service
-	dbKeyValue := inmemory.NewStorageKeyValue()
-	cryptManager, err := crypt.New(cfg.SecretKey)
+	// PostgreSQL initialization
+	postgresDB, err := postgres.New(cfg.PG.DatabaseDSN)
+	if err != nil {
+		l.Log.Fatal(err)
+	}
+	defer postgresDB.Close()
+	if err = pg.Migrate(postgresDB.Pool, cfg.PG.MigrationVersion); err != nil {
+		l.Log.Fatal(err)
+	}
+
+	// Manager initialization
+	jwtManager := jwtmanager.New(cfg.SecretKey, cfg.TokenExp) // for user endpoints
+	cryptManager, err := crypt.New(cfg.SecretKey)             // cryptManager to encrypt data: key-value
 	if err != nil {
 		l.Log.Error(err)
 	}
-	keyValueService := service.NewKeyValueService(dbKeyValue, cryptManager)
-	keyValueServer := apigrpc.NewKeyValueServer(keyValueService)
+	// Service initialization with DB:
+	userService := service.NewUserService(pg.NewUserStorage(postgresDB)) // pg.NewUserStorage(postgresDB) // inmemory.NewUserStorage()
+	keyValueService := service.NewKeyValueService(
+		pg.NewKeyValueStorage(postgresDB), // pg.NewKeyValueStorage(postgresDB) // inmemory.NewKeyValueStorage()
+		cryptManager,
+	)
 
-	// gRPC server
+	// Start gRPC server with services:
+	// - userServer to store the users
+	// - keyValueServer to store key-value data: login/pass
 	l.Log.Infof("Starting gRPC server on %s", cfg.GRPC.Address)
-	interceptor := middleware.NewAuthInterceptor(jwtManager)
-	serverOptions := []grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(
-			logging.UnaryServerInterceptor(middleware.InterceptorLogger(l)),
-			interceptor.UnaryAuthInterceptor,
-		),
-	}
-	grpcServer, err := grpcserver.New(cfg.GRPC.Address, serverOptions...)
-	pb.RegisterUserServiceServer(grpcServer.Reg(), userServer)
-	pb.RegisterKeyValueServiceServer(grpcServer.Reg(), keyValueServer)
-	reflection.Register(grpcServer.Reg())
+	server := grpc.New(userService, keyValueService, jwtManager, cfg, l)
 
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)
@@ -72,10 +69,10 @@ func Run(cfg *config.Config) {
 	case s := <-interrupt:
 		l.Log.Info("Got signal: " + s.String())
 
-	case err = <-grpcServer.Notify():
+	case err = <-server.Notify():
 		l.Log.Errorf("grpcServer.Notify: %v", err)
 	}
 
 	// Shutdown
-	grpcServer.Shutdown()
+	server.Shutdown()
 }

@@ -2,8 +2,9 @@ package config
 
 import (
 	"flag"
-	"github.com/ilyakaznacheev/cleanenv"
 	"os"
+
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type (
@@ -12,6 +13,7 @@ type (
 		App  `json:"app"`
 		Log  `json:"logger"`
 		GRPC `json:"grpc"`
+		PG   `json:"dsn"`
 	}
 
 	App struct {
@@ -25,6 +27,11 @@ type (
 
 	GRPC struct {
 		Address string `json:"grpc_address" env:"GRPC_ADDRESS" env-default:":3200"`
+	}
+
+	PG struct {
+		DatabaseDSN      string `json:"database_dsn" env:"DATABASE_DSN"`
+		MigrationVersion int64  `json:"migration_version" env:"MIGRATION_VERSION" env-default:"1"`
 	}
 )
 

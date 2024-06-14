@@ -1,13 +1,15 @@
 package grpcserver
 
 import (
-	"google.golang.org/grpc"
 	"net"
+
+	"google.golang.org/grpc"
 )
 
 // Server contains a new gRPC server.
 type Server struct {
-	server *grpc.Server
+	Server *grpc.Server
+	Listen net.Listener
 	notify chan error
 }
 
@@ -17,21 +19,18 @@ func New(address string, option ...grpc.ServerOption) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	s := &Server{server: grpc.NewServer(option...)}
-	s.Start(listen)
+	s := &Server{
+		Listen: listen,
+		Server: grpc.NewServer(option...),
+	}
 
 	return s, nil
-}
-
-func (s *Server) Reg() *grpc.Server {
-	return s.server
 }
 
 // Start turns on gRPC server.
 func (s *Server) Start(listen net.Listener) {
 	go func() {
-		s.notify <- s.server.Serve(listen)
+		s.notify <- s.Server.Serve(listen)
 		close(s.notify)
 	}()
 }
@@ -43,5 +42,5 @@ func (s *Server) Notify() <-chan error {
 
 // Shutdown turns off gRPC server.
 func (s *Server) Shutdown() {
-	s.server.GracefulStop()
+	s.Server.GracefulStop()
 }
