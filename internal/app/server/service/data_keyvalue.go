@@ -52,6 +52,10 @@ func (s *KeyValueService) Get(ctx context.Context, id int64) (*models.KeyValue, 
 	if err != nil {
 		return nil, err
 	}
+	// check access
+	if !data.CanAccess(ctx) {
+		return nil, errs.ErrPermissionDenied
+	}
 
 	// decrypt
 	if data.Key, err = s.Decrypt(data.Key); err != nil {

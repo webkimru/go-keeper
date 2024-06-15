@@ -1,6 +1,9 @@
 package models
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 type KeyValue struct {
 	ID        int64
@@ -9,6 +12,7 @@ type KeyValue struct {
 	Key       string
 	Value     string
 	CreatedAt string
+	UpdatedAt string
 }
 
 func (k *KeyValue) Validate() (string, error) {
@@ -28,4 +32,8 @@ func (k *KeyValue) required(field string) error {
 	}
 
 	return nil
+}
+
+func (k *KeyValue) CanAccess(ctx context.Context) bool {
+	return k.UserID == (ctx.Value("userID")).(int64)
 }

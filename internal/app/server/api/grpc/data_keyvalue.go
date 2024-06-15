@@ -63,11 +63,18 @@ func (s *KeyValueServer) AddKeyValue(ctx context.Context, in *pb.AddKeyValueRequ
 }
 
 // GetKeyValue get key-value from the store.
+// @Success  0 OK               status & json
+// @Failure  5 NotFound         status
+// @Failure  7 PermissionDenied status
+// @Failure 13 Internal         status
 func (s *KeyValueServer) GetKeyValue(ctx context.Context, in *pb.GetKeyValueRequest) (*pb.GetKeyValueResponse, error) {
 	data, err := s.keyValueService.Get(ctx, in.GetId())
 	if err != nil {
 		if errors.Is(err, errs.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, errs.MsgNotFound)
+		}
+		if errors.Is(err, errs.ErrPermissionDenied) {
+			return nil, status.Errorf(codes.PermissionDenied, errs.MsgPermissionDenied)
 		}
 
 		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
