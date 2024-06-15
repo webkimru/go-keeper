@@ -2,7 +2,6 @@ package inmemory
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/webkimru/go-keeper/internal/app/server/models"
@@ -43,7 +42,7 @@ func (s *UserStorage) Find(ctx context.Context, login string) (*models.User, err
 
 	_, exist := s.users[login]
 	if !exist {
-		return nil, fmt.Errorf("UserStorage - Find - user is not found")
+		return nil, errs.ErrNotFound
 	}
 
 	return s.users[login], nil
