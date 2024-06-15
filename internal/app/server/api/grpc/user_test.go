@@ -18,7 +18,7 @@ import (
 
 func TestUserServer_Register(t *testing.T) {
 	s := &UserServer{
-		userService: inmemory.NewStorage(),
+		userService: inmemory.NewUserStorage(),
 		jwtManager:  jwtmanager.New("secret", 1),
 	}
 	tests := []struct {
@@ -59,8 +59,8 @@ func TestUserServer_Register(t *testing.T) {
 }
 
 func TestUserServer_Login(t *testing.T) {
-	nousers := service.NewUserService(inmemory.NewStorage())
-	withuser := service.NewUserService(inmemory.NewStorage())
+	nousers := service.NewUserService(inmemory.NewUserStorage())
+	withuser := service.NewUserService(inmemory.NewUserStorage())
 	err := withuser.Add(context.Background(), &models.User{
 		Login:    "test",
 		Password: "test",
