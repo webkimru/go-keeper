@@ -56,10 +56,10 @@ func (s *KeyValueServer) AddKeyValue(ctx context.Context, in *pb.AddKeyValueRequ
 			return nil, status.Errorf(codes.InvalidArgument, s.fieldMessage(errs.MsgFieldRequired, err))
 		}
 
-		return nil, status.Errorf(codes.Internal, fmt.Sprintf("%v", err))
+		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
 	}
 
-	return nil, nil
+	return &pb.AddKeyValueResponse{}, nil
 }
 
 // GetKeyValue get key-value from the store.
@@ -70,7 +70,7 @@ func (s *KeyValueServer) GetKeyValue(ctx context.Context, in *pb.GetKeyValueRequ
 			return nil, status.Errorf(codes.NotFound, errs.MsgNotFound)
 		}
 
-		return nil, status.Errorf(codes.Internal, errs.MsgInternalServer)
+		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
 	}
 
 	return &pb.GetKeyValueResponse{

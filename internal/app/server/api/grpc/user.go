@@ -3,7 +3,6 @@ package grpc
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -41,7 +40,11 @@ func NewUserServer(userService UserService, jwtManager *jwtmanager.JWTManager) *
 func (s *UserServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
 	user, err := s.userService.Find(ctx, in.GetLogin())
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, errs.MsgNotFound)
+		if errors.Is(err, errs.ErrNotFound) {
+			return nil, status.Errorf(codes.NotFound, errs.MsgNotFound)
+		}
+
+		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
 	}
 
 	if user == nil || !user.ValidPassword(in.GetPassword()) {
@@ -50,7 +53,7 @@ func (s *UserServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginR
 
 	token, err := s.jwtManager.BuildJWTString(user.ID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, errs.MsgInternalServer)
+		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
 	}
 
 	return &pb.LoginResponse{AccessToken: token}, nil
@@ -75,7 +78,7 @@ func (s *UserServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.
 			return &response, nil
 		}
 
-		return nil, status.Errorf(codes.Internal, fmt.Sprintf("%v", err))
+		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
 	}
 
 	return &response, nil

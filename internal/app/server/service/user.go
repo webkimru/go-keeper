@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/webkimru/go-keeper/internal/app/server/models"
 )
 
@@ -27,11 +25,11 @@ func NewUserService(storage UserStore) *UserService {
 func (s *UserService) Add(ctx context.Context, u *models.User) error {
 	user, err := models.NewUser(u.Login, u.Password)
 	if err != nil {
-		return fmt.Errorf("UserService - Add - models.NewUser(): %w", err)
+		return err
 	}
 
-	if err := s.storage.Add(ctx, user); err != nil {
-		return fmt.Errorf("UserService - Add - s.storage.Add(): %w", err)
+	if err = s.storage.Add(ctx, user); err != nil {
+		return err
 	}
 
 	return nil
@@ -41,7 +39,7 @@ func (s *UserService) Add(ctx context.Context, u *models.User) error {
 func (s *UserService) Find(ctx context.Context, login string) (*models.User, error) {
 	user, err := s.storage.Find(ctx, login)
 	if err != nil {
-		return nil, fmt.Errorf("UserService - Find - s.storage.Find(): %w", err)
+		return nil, err
 	}
 
 	return user, nil

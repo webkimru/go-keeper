@@ -2,6 +2,7 @@ package errs
 
 import (
 	"errors"
+	"fmt"
 )
 
 const (
@@ -17,3 +18,7 @@ var (
 	ErrBadRequest    = errors.New("bad request")
 	ErrNotFound      = errors.New("not found")
 )
+
+func MsgInternalServerError(err error) string {
+	return fmt.Sprintf("%s: %v", MsgInternalServer, err)
+}
