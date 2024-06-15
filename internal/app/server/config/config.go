@@ -31,7 +31,9 @@ type (
 
 	PG struct {
 		DatabaseDSN      string `json:"database_dsn" env:"DATABASE_DSN"`
-		MigrationVersion int64  `json:"migration_version" env:"MIGRATION_VERSION" env-default:"1"`
+		MigrationVersion int64  `json:"migration_version" env:"DB_MIGRATION_VERSION" env-default:"1"`
+		ConnectTimeout   int    `json:"connect_timeout" env:"DB_CONNECT_TIMEOUT" env-default:"60"`
+		QueryTimeout     int    `json:"query_timeout" env:"DB_QUERY_TIMEOUT" env-default:"10"`
 	}
 )
 

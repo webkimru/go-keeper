@@ -3,8 +3,10 @@ package inmemory
 import (
 	"context"
 	"fmt"
-	"github.com/webkimru/go-keeper/internal/app/server/models"
 	"sync"
+
+	"github.com/webkimru/go-keeper/internal/app/server/models"
+	"github.com/webkimru/go-keeper/pkg/errs"
 )
 
 // Storage contains users in memory.
@@ -25,7 +27,7 @@ func (s *Storage) Add(ctx context.Context, user *models.User) error {
 
 	_, exist := s.users[user.Login]
 	if exist {
-		return fmt.Errorf("Storage - Add - user already exists")
+		return errs.ErrAlreadyExists
 	}
 
 	user.ID = int64(len(s.users)) + 1

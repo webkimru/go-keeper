@@ -2,6 +2,8 @@ package grpc
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -57,9 +59,15 @@ func (s *UserServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.
 		Login:    in.GetLogin(),
 		Password: in.GetPassword(),
 	}
+
 	err := s.userService.Add(ctx, user)
 	if err != nil {
-		response.Error = errs.MsgAlreadyExists
+		if errors.Is(err, errs.ErrAlreadyExists) {
+			response.Error = errs.MsgAlreadyExists
+			return &response, nil
+		}
+
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("%v", err))
 	}
 
 	return &response, nil

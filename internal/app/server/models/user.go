@@ -7,9 +7,10 @@ import (
 
 // User contains user's information.
 type User struct {
-	ID       int64
-	Login    string
-	Password string
+	ID        int64
+	Login     string
+	Password  string
+	CreatedAt string
 }
 
 // NewUser returns a new user.

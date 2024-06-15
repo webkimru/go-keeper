@@ -33,12 +33,16 @@ func Run(cfg *config.Config) {
 	)
 
 	// PostgreSQL initialization
-	postgresDB, err := postgres.New(cfg.PG.DatabaseDSN)
+	pgx, err := postgres.New(
+		cfg.PG.DatabaseDSN,
+		postgres.ConnectTimeout(cfg.PG.ConnectTimeout),
+	)
 	if err != nil {
 		l.Log.Fatal(err)
 	}
-	defer postgresDB.Close()
-	if err = pg.Migrate(postgresDB.Pool, cfg.PG.MigrationVersion); err != nil {
+	defer pgx.Close()
+	// migration
+	if err = pgx.Migrate(cfg.PG.MigrationVersion); err != nil {
 		l.Log.Fatal(err)
 	}
 
@@ -49,9 +53,9 @@ func Run(cfg *config.Config) {
 		l.Log.Error(err)
 	}
 	// Service initialization with DB:
-	userService := service.NewUserService(pg.NewUserStorage(postgresDB)) // pg.NewUserStorage(postgresDB) // inmemory.NewUserStorage()
+	userService := service.NewUserService(pg.NewUserStorage(pgx, cfg)) // pg.NewUserStorage(postgresDB) // inmemory.NewUserStorage()
 	keyValueService := service.NewKeyValueService(
-		pg.NewKeyValueStorage(postgresDB), // pg.NewKeyValueStorage(postgresDB) // inmemory.NewKeyValueStorage()
+		pg.NewKeyValueStorage(pgx), // pg.NewKeyValueStorage(postgresDB) // inmemory.NewKeyValueStorage()
 		cryptManager,
 	)
 
