@@ -81,7 +81,7 @@ func TestUserServer_Login(t *testing.T) {
 				Password: "test",
 			},
 			nousers,
-			codes.Unauthenticated,
+			codes.NotFound,
 			&pb.LoginResponse{},
 		},
 		{
