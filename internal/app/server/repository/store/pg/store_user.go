@@ -42,7 +42,8 @@ func (s *UserStorage) Add(ctx context.Context, user *models.User) error {
 		if err == pgx.ErrNoRows {
 			return errs.ErrAlreadyExists
 		}
-		return fmt.Errorf("pg - UserStorage - Add() - Exec(): %w", err)
+
+		return fmt.Errorf("pg - UserStorage - Add() - QueryRow(): %w", err)
 	}
 
 	return nil
@@ -50,6 +51,23 @@ func (s *UserStorage) Add(ctx context.Context, user *models.User) error {
 
 // Find look for the user.
 func (s *UserStorage) Find(ctx context.Context, login string) (*models.User, error) {
+	newCtx, cancel := context.WithTimeout(ctx, s.queryTimeout)
+	defer cancel()
 
-	return nil, nil
+	var dbLogin, dbPassword string
+
+	res := s.db.Pool.QueryRow(newCtx, `
+		SELECT login, password FROM users
+			WHERE login = $1`, login)
+
+	err := res.Scan(&dbLogin, &dbPassword)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, errs.ErrNotFound
+		}
+
+		return nil, fmt.Errorf("pg - UserStorage - Find() - QueryRow(): %w", err)
+	}
+
+	return &models.User{Login: dbLogin, Password: dbPassword}, nil
 }
