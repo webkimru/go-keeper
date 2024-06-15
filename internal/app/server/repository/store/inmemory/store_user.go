@@ -9,19 +9,19 @@ import (
 	"github.com/webkimru/go-keeper/pkg/errs"
 )
 
-// Storage contains users in memory.
-type Storage struct {
+// UserStorage contains users in memory.
+type UserStorage struct {
 	m     sync.RWMutex
 	users map[string]*models.User
 }
 
-// NewStorage returns a new storage for users.
-func NewStorage() *Storage {
-	return &Storage{users: make(map[string]*models.User)}
+// NewUserStorage returns a new storage for users.
+func NewUserStorage() *UserStorage {
+	return &UserStorage{users: make(map[string]*models.User)}
 }
 
 // Add creates a new user.
-func (s *Storage) Add(ctx context.Context, user *models.User) error {
+func (s *UserStorage) Add(ctx context.Context, user *models.User) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -37,13 +37,13 @@ func (s *Storage) Add(ctx context.Context, user *models.User) error {
 }
 
 // Find look for the user.
-func (s *Storage) Find(ctx context.Context, login string) (*models.User, error) {
+func (s *UserStorage) Find(ctx context.Context, login string) (*models.User, error) {
 	s.m.RLock()
 	defer s.m.RUnlock()
 
 	_, exist := s.users[login]
 	if !exist {
-		return nil, fmt.Errorf("Storage - Find - user is not found")
+		return nil, fmt.Errorf("UserStorage - Find - user is not found")
 	}
 
 	return s.users[login], nil
