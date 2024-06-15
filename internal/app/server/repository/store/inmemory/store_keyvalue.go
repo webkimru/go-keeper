@@ -9,19 +9,19 @@ import (
 	"github.com/webkimru/go-keeper/pkg/errs"
 )
 
-// StorageKeyValue contains data in memory.
-type StorageKeyValue struct {
+// KeyValueStorage contains data in memory.
+type KeyValueStorage struct {
 	m        sync.RWMutex
 	keyValue map[int64]map[int64]models.KeyValue
 }
 
-// NewStorageKeyValue returns a new storage for data.
-func NewStorageKeyValue() *StorageKeyValue {
-	return &StorageKeyValue{keyValue: make(map[int64]map[int64]models.KeyValue)}
+// NewKeyValueStorage returns a new storage for data.
+func NewKeyValueStorage() *KeyValueStorage {
+	return &KeyValueStorage{keyValue: make(map[int64]map[int64]models.KeyValue)}
 }
 
 // Add creates a new data.
-func (s *StorageKeyValue) Add(ctx context.Context, model models.KeyValue) error {
+func (s *KeyValueStorage) Add(ctx context.Context, model models.KeyValue) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -42,7 +42,7 @@ func (s *StorageKeyValue) Add(ctx context.Context, model models.KeyValue) error 
 }
 
 // Get returns a row of the data.
-func (s *StorageKeyValue) Get(ctx context.Context, id int64) (*models.KeyValue, error) {
+func (s *KeyValueStorage) Get(ctx context.Context, id int64) (*models.KeyValue, error) {
 	userID := ctx.Value("userID").(int64)
 
 	if _, exist := s.keyValue[userID]; !exist {
@@ -58,19 +58,19 @@ func (s *StorageKeyValue) Get(ctx context.Context, id int64) (*models.KeyValue, 
 }
 
 // List returns a slice of the data.
-func (s *StorageKeyValue) List(ctx context.Context) ([]models.KeyValue, error) {
+func (s *KeyValueStorage) List(ctx context.Context) ([]models.KeyValue, error) {
 
 	return nil, nil
 }
 
 // Update updates a row of the data.
-func (s *StorageKeyValue) Update(ctx context.Context, model models.KeyValue) error {
+func (s *KeyValueStorage) Update(ctx context.Context, model models.KeyValue) error {
 
 	return nil
 }
 
 // Delete deletes a row of the data.
-func (s *StorageKeyValue) Delete(ctx context.Context, id int64) error {
+func (s *KeyValueStorage) Delete(ctx context.Context, id int64) error {
 
 	return nil
 }
