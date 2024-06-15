@@ -54,13 +54,14 @@ func (s *UserStorage) Find(ctx context.Context, login string) (*models.User, err
 	newCtx, cancel := context.WithTimeout(ctx, s.queryTimeout)
 	defer cancel()
 
+	var dbID int64
 	var dbLogin, dbPassword string
 
 	res := s.db.Pool.QueryRow(newCtx, `
-		SELECT login, password FROM users
+		SELECT id, login, password FROM users
 			WHERE login = $1`, login)
 
-	err := res.Scan(&dbLogin, &dbPassword)
+	err := res.Scan(&dbID, &dbLogin, &dbPassword)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, errs.ErrNotFound
@@ -69,5 +70,5 @@ func (s *UserStorage) Find(ctx context.Context, login string) (*models.User, err
 		return nil, fmt.Errorf("pg - UserStorage - Find() - QueryRow(): %w", err)
 	}
 
-	return &models.User{Login: dbLogin, Password: dbPassword}, nil
+	return &models.User{ID: dbID, Login: dbLogin, Password: dbPassword}, nil
 }
