@@ -1,20 +1,19 @@
 package errs
 
-import "errors"
+import (
+	"errors"
+)
 
 const (
-	MsgInternalServer  = "internal server error"
-	MsgAlreadyExists   = "already exists"
-	MsgNotFound        = "not found"
-	MsgInvalidCred     = "invalid credentials"
-	MsgFieldRequired   = "field is required"
-	MsgContextDeadline = "context deadline exceeded"
+	MsgAlreadyExists  = "already exists"
+	MsgInternalServer = "internal server error"
+	MsgInvalidCred    = "invalid credentials"
+	MsgFieldRequired  = "field is required"
+	MsgNotFound       = "not found"
 )
 
 var (
-	ErrNotFound        = errors.New("not found")
-	ErrAlreadyExists   = errors.New("already exists")
-	ErrInternalServer  = errors.New("internal server error")
-	ErrBadRequest      = errors.New("bad request")
-	ErrContextDeadline = errors.New("context deadline exceeded")
+	ErrAlreadyExists = errors.New("already exists")
+	ErrBadRequest    = errors.New("bad request")
+	ErrNotFound      = errors.New("not found")
 )
