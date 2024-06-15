@@ -34,10 +34,14 @@ func NewUserServer(userService UserService, jwtManager *jwtmanager.JWTManager) *
 }
 
 // Login is a unary RPC to login user.
+// @Success  0 OK              status & json
+// @Failure  5 NotFound        status
+// @Failure 16 Unauthenticated status
+// @Failure 13 Internal        status
 func (s *UserServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
 	user, err := s.userService.Find(ctx, in.GetLogin())
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, errs.MsgNotFound)
+		return nil, status.Errorf(codes.NotFound, errs.MsgNotFound)
 	}
 
 	if user == nil || !user.ValidPassword(in.GetPassword()) {
@@ -52,6 +56,10 @@ func (s *UserServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginR
 	return &pb.LoginResponse{AccessToken: token}, nil
 }
 
+// Register is a unary RPC to creates a new user.
+// @Success  0 OK              status & json
+// @Failure 16 OK              json {"error": "already exists"}
+// @Failure 13 Internal        status
 func (s *UserServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	var response pb.RegisterResponse
 
