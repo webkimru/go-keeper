@@ -2,20 +2,40 @@ package pg
 
 import (
 	"context"
+	"fmt"
+	"time"
+
+	"github.com/webkimru/go-keeper/internal/app/server/config"
 	"github.com/webkimru/go-keeper/internal/app/server/models"
 	"github.com/webkimru/go-keeper/pkg/postgres"
 )
 
 type KeyValueStorage struct {
-	db *postgres.Postgres
+	db           *postgres.Postgres
+	queryTimeout time.Duration
 }
 
-func NewKeyValueStorage(pg *postgres.Postgres) *KeyValueStorage {
-	return &KeyValueStorage{db: pg}
+func NewKeyValueStorage(pg *postgres.Postgres, cfg *config.Config) *KeyValueStorage {
+	return &KeyValueStorage{
+		db:           pg,
+		queryTimeout: time.Duration(cfg.PG.QueryTimeout) * time.Second,
+	}
 }
 
 // Add creates a new data.
 func (s *KeyValueStorage) Add(ctx context.Context, model models.KeyValue) error {
+	newCtx, cancel := context.WithTimeout(ctx, s.queryTimeout)
+	defer cancel()
+
+	res, err := s.db.Pool.Query(newCtx, `
+		INSERT INTO keyvalues (user_id, title, key, value)
+			VALUES($1, $2, $3, $4)`, model.UserID, model.Title, model.Key, model.Value)
+	if err != nil {
+		return fmt.Errorf("pg - KeyValueStorage - Add() - s.db.Pool.Query(): %w", err)
+	}
+
+	// NOTICE: it's required else it will be the endless loop pool connection
+	defer res.Close()
 
 	return nil
 }

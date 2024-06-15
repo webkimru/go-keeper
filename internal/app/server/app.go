@@ -55,7 +55,7 @@ func Run(cfg *config.Config) {
 	// Service initialization with DB:
 	userService := service.NewUserService(pg.NewUserStorage(pgx, cfg)) // pg.NewUserStorage(postgresDB) // inmemory.NewUserStorage()
 	keyValueService := service.NewKeyValueService(
-		pg.NewKeyValueStorage(pgx), // pg.NewKeyValueStorage(postgresDB) // inmemory.NewKeyValueStorage()
+		pg.NewKeyValueStorage(pgx, cfg), // pg.NewKeyValueStorage(postgresDB) // inmemory.NewKeyValueStorage()
 		cryptManager,
 	)
 

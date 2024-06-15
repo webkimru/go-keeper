@@ -36,6 +36,10 @@ func NewKeyValueServer(keyValueService KeyValueService) *KeyValueServer {
 }
 
 // AddKeyValue saves key-value to the store.
+// @Success  0 OK              status & json
+// @Failure  3 InvalidArgument status
+// @Failure  6 AlreadyExists   status
+// @Failure 13 Internal        status
 func (s *KeyValueServer) AddKeyValue(ctx context.Context, in *pb.AddKeyValueRequest) (*pb.AddKeyValueResponse, error) {
 	data := &models.KeyValue{
 		UserID: (ctx.Value("userID")).(int64),
@@ -52,7 +56,7 @@ func (s *KeyValueServer) AddKeyValue(ctx context.Context, in *pb.AddKeyValueRequ
 			return nil, status.Errorf(codes.InvalidArgument, s.fieldMessage(errs.MsgFieldRequired, err))
 		}
 
-		return nil, status.Errorf(codes.Internal, errs.MsgInternalServer)
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("%v", err))
 	}
 
 	return nil, nil

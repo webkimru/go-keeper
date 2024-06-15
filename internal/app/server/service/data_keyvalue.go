@@ -40,7 +40,7 @@ func (s *KeyValueService) Add(ctx context.Context, model models.KeyValue) error 
 	model.Value = s.cryptManager.Encrypt(model.Value)
 
 	if err := s.storage.Add(ctx, model); err != nil {
-		return fmt.Errorf("KeyValueService - Add - s.storage.Add(): %w", err)
+		return err
 	}
 
 	return nil
