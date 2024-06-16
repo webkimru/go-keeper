@@ -35,7 +35,7 @@ func NewKeyValueServer(keyValueService KeyValueService) *KeyValueServer {
 	return &KeyValueServer{keyValueService: keyValueService}
 }
 
-// AddKeyValue saves key-value to the store.
+// AddKeyValue saves data to the store.
 // @Success  0 OK              status & json
 // @Failure  3 InvalidArgument status
 // @Failure  6 AlreadyExists   status
@@ -62,7 +62,7 @@ func (s *KeyValueServer) AddKeyValue(ctx context.Context, in *pb.AddKeyValueRequ
 	return &pb.AddKeyValueResponse{}, nil
 }
 
-// GetKeyValue get key-value from the store.
+// GetKeyValue get data from the store.
 // @Success  0 OK               status & json
 // @Failure  5 NotFound         status
 // @Failure  7 PermissionDenied status
@@ -98,4 +98,37 @@ func (s *KeyValueServer) fieldMessage(mess string, err error) string {
 	field := strings.Split(err.Error(), ":")
 
 	return strings.Replace(mess, "field", fmt.Sprintf("field %s", field[0]), 1)
+}
+
+// UpdateKeyValue updates data in the store.
+// @Success  0 OK               status & json
+// @Failure  3 InvalidArgument status
+// @Failure  5 NotFound         status
+// @Failure  7 PermissionDenied status
+// @Failure 13 Internal         status
+func (s *KeyValueServer) UpdateKeyValue(ctx context.Context, in *pb.UpdateKeyValueRequest) (*pb.UpdateKeyValueResponse, error) {
+	data := &models.KeyValue{
+		ID:     in.GetId(),
+		UserID: (ctx.Value("userID")).(int64),
+		Title:  in.GetData().GetTitle(),
+		Key:    in.GetData().GetKey(),
+		Value:  in.GetData().GetValue(),
+	}
+
+	err := s.keyValueService.Update(ctx, *data)
+	if err != nil {
+		if errors.Is(err, errs.ErrNotFound) {
+			return nil, status.Errorf(codes.NotFound, errs.MsgNotFound)
+		}
+		if errors.Is(err, errs.ErrPermissionDenied) {
+			return nil, status.Errorf(codes.PermissionDenied, errs.MsgPermissionDenied)
+		}
+		if errors.Is(err, errs.ErrBadRequest) {
+			return nil, status.Errorf(codes.InvalidArgument, s.fieldMessage(errs.MsgFieldRequired, err))
+		}
+
+		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
+	}
+
+	return &pb.UpdateKeyValueResponse{}, nil
 }

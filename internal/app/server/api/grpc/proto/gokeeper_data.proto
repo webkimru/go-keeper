@@ -10,6 +10,7 @@ service KeyValueService {
   rpc AddKeyValue(AddKeyValueRequest) returns (AddKeyValueResponse);
   rpc GetKeyValue(GetKeyValueRequest) returns (GetKeyValueResponse);
   rpc ListKeyValue(ListKeyValueRequest) returns (ListKeyValueResponse);
+  rpc UpdateKeyValue(UpdateKeyValueRequest) returns (UpdateKeyValueResponse);
   rpc DelKeyValue(DelKeyValueRequest) returns (DelKeyValueResponse);
 }
 

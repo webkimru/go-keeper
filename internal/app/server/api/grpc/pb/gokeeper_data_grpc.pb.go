@@ -25,6 +25,7 @@ type KeyValueServiceClient interface {
 	AddKeyValue(ctx context.Context, in *AddKeyValueRequest, opts ...grpc.CallOption) (*AddKeyValueResponse, error)
 	GetKeyValue(ctx context.Context, in *GetKeyValueRequest, opts ...grpc.CallOption) (*GetKeyValueResponse, error)
 	ListKeyValue(ctx context.Context, in *ListKeyValueRequest, opts ...grpc.CallOption) (*ListKeyValueResponse, error)
+	UpdateKeyValue(ctx context.Context, in *UpdateKeyValueRequest, opts ...grpc.CallOption) (*UpdateKeyValueResponse, error)
 	DelKeyValue(ctx context.Context, in *DelKeyValueRequest, opts ...grpc.CallOption) (*DelKeyValueResponse, error)
 }
 
@@ -63,6 +64,15 @@ func (c *keyValueServiceClient) ListKeyValue(ctx context.Context, in *ListKeyVal
 	return out, nil
 }
 
+func (c *keyValueServiceClient) UpdateKeyValue(ctx context.Context, in *UpdateKeyValueRequest, opts ...grpc.CallOption) (*UpdateKeyValueResponse, error) {
+	out := new(UpdateKeyValueResponse)
+	err := c.cc.Invoke(ctx, "/kim.gokeeper.KeyValueService/UpdateKeyValue", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *keyValueServiceClient) DelKeyValue(ctx context.Context, in *DelKeyValueRequest, opts ...grpc.CallOption) (*DelKeyValueResponse, error) {
 	out := new(DelKeyValueResponse)
 	err := c.cc.Invoke(ctx, "/kim.gokeeper.KeyValueService/DelKeyValue", in, out, opts...)
@@ -79,6 +89,7 @@ type KeyValueServiceServer interface {
 	AddKeyValue(context.Context, *AddKeyValueRequest) (*AddKeyValueResponse, error)
 	GetKeyValue(context.Context, *GetKeyValueRequest) (*GetKeyValueResponse, error)
 	ListKeyValue(context.Context, *ListKeyValueRequest) (*ListKeyValueResponse, error)
+	UpdateKeyValue(context.Context, *UpdateKeyValueRequest) (*UpdateKeyValueResponse, error)
 	DelKeyValue(context.Context, *DelKeyValueRequest) (*DelKeyValueResponse, error)
 	mustEmbedUnimplementedKeyValueServiceServer()
 }
@@ -95,6 +106,9 @@ func (UnimplementedKeyValueServiceServer) GetKeyValue(context.Context, *GetKeyVa
 }
 func (UnimplementedKeyValueServiceServer) ListKeyValue(context.Context, *ListKeyValueRequest) (*ListKeyValueResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListKeyValue not implemented")
+}
+func (UnimplementedKeyValueServiceServer) UpdateKeyValue(context.Context, *UpdateKeyValueRequest) (*UpdateKeyValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateKeyValue not implemented")
 }
 func (UnimplementedKeyValueServiceServer) DelKeyValue(context.Context, *DelKeyValueRequest) (*DelKeyValueResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelKeyValue not implemented")
@@ -166,6 +180,24 @@ func _KeyValueService_ListKeyValue_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _KeyValueService_UpdateKeyValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateKeyValueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KeyValueServiceServer).UpdateKeyValue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/kim.gokeeper.KeyValueService/UpdateKeyValue",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KeyValueServiceServer).UpdateKeyValue(ctx, req.(*UpdateKeyValueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _KeyValueService_DelKeyValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DelKeyValueRequest)
 	if err := dec(in); err != nil {
@@ -202,6 +234,10 @@ var KeyValueService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListKeyValue",
 			Handler:    _KeyValueService_ListKeyValue_Handler,
+		},
+		{
+			MethodName: "UpdateKeyValue",
+			Handler:    _KeyValueService_UpdateKeyValue_Handler,
 		},
 		{
 			MethodName: "DelKeyValue",

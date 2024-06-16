@@ -62,7 +62,7 @@ func (s *KeyValueStorage) Get(ctx context.Context, id int64) (*models.KeyValue, 
 			return nil, errs.ErrNotFound
 		}
 
-		return nil, fmt.Errorf("pg - KeyValueStorage - Get() - QueryRow(): %w", err)
+		return nil, fmt.Errorf("pg - KeyValueStorage - Get() - s.db.Pool.QueryRow(): %w", err)
 	}
 
 	return &models.KeyValue{
@@ -82,8 +82,36 @@ func (s *KeyValueStorage) List(ctx context.Context) ([]models.KeyValue, error) {
 
 // Update updates a row of the data.
 func (s *KeyValueStorage) Update(ctx context.Context, model models.KeyValue) error {
+	newCtx, cancel := context.WithTimeout(ctx, s.queryTimeout)
+	defer cancel()
 
-	return nil
+	tx, err := s.db.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	res := tx.QueryRow(newCtx, `
+		UPDATE keyvalues SET title = $1, key = $2, value = $3
+			WHERE id = $4
+				RETURNING user_id`, model.Title, model.Key, model.Value, model.ID)
+
+	var dbUserID int64
+
+	err = res.Scan(&dbUserID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return errs.ErrNotFound
+		}
+
+		return fmt.Errorf("pg - KeyValueStorage - Update() - res.Scan(): %w", err)
+	}
+
+	if dbUserID != model.UserID {
+		return errs.ErrPermissionDenied
+	}
+
+	return tx.Commit(ctx)
 }
 
 // Delete deletes a row of the data.

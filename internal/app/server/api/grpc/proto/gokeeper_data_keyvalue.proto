@@ -37,6 +37,15 @@ message ListKeyValueResponse {
   repeated KeyValue data = 2;
 }
 
+message UpdateKeyValueRequest {
+  int64 id = 1;
+  KeyValue data = 2;
+}
+
+message UpdateKeyValueResponse {
+  string error = 1;
+}
+
 message DelKeyValueRequest {
   int64 id = 1;
 }

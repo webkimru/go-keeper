@@ -15,23 +15,37 @@ type KeyValue struct {
 	UpdatedAt string
 }
 
-func (k *KeyValue) Validate() (string, error) {
-	if err := k.required(k.Key); err != nil {
-		return "key", err
-	}
-	if err := k.required(k.Value); err != nil {
-		return "value", err
+func (k *KeyValue) Validate(required ...string) (string, error) {
+	for _, field := range required {
+		if !k.valid(field) {
+			return field, fmt.Errorf("field %s is required", field)
+		}
 	}
 
 	return "", nil
 }
 
-func (k *KeyValue) required(field string) error {
-	if field == "" {
-		return fmt.Errorf("field %s is required", field)
+func (k *KeyValue) valid(field string) bool {
+	switch field {
+	case "id":
+		if k.ID == 0 {
+			return false
+		}
+	case "title":
+		if k.Title == "" {
+			return false
+		}
+	case "key":
+		if k.Key == "" {
+			return false
+		}
+	case "value":
+		if k.Value == "" {
+			return false
+		}
 	}
 
-	return nil
+	return true
 }
 
 func (k *KeyValue) CanAccess(ctx context.Context) bool {

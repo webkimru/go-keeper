@@ -31,7 +31,7 @@ func NewKeyValueService(storage KeyValueStore, cryptManager *crypt.Crypt) *KeyVa
 
 // Add puts data to the storage.
 func (s *KeyValueService) Add(ctx context.Context, model models.KeyValue) error {
-	if field, err := model.Validate(); err != nil {
+	if field, err := model.Validate("title", "key", "value"); err != nil {
 		return fmt.Errorf("%s: %w", field, errs.ErrBadRequest)
 	}
 
@@ -80,6 +80,14 @@ func (s *KeyValueService) List(ctx context.Context) ([]models.KeyValue, error) {
 
 // Update updates a row of the data.
 func (s *KeyValueService) Update(ctx context.Context, model models.KeyValue) error {
+	if field, err := model.Validate("id", "title", "key", "value"); err != nil {
+		return fmt.Errorf("%s: %w", field, errs.ErrBadRequest)
+	}
+
+	// encrypt
+	model.Key = s.cryptManager.Encrypt(model.Key)
+	model.Value = s.cryptManager.Encrypt(model.Value)
+
 	if err := s.storage.Update(ctx, model); err != nil {
 		return err
 	}
