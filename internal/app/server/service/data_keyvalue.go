@@ -13,9 +13,9 @@ import (
 type KeyValueStore interface {
 	Add(ctx context.Context, model models.KeyValue) error
 	Get(ctx context.Context, id int64) (*models.KeyValue, error)
-	List(ctx context.Context, id, limit, offset int64) ([]models.KeyValue, error)
+	List(ctx context.Context, userID, limit, offset int64) ([]models.KeyValue, error)
 	Update(ctx context.Context, model models.KeyValue) error
-	Delete(ctx context.Context, id int64) error
+	Delete(ctx context.Context, userID, id int64) error
 }
 
 // KeyValueService contains data storage.
@@ -70,13 +70,13 @@ func (s *KeyValueService) Get(ctx context.Context, id int64) (*models.KeyValue, 
 
 // List returns a slice of the data.
 func (s *KeyValueService) List(ctx context.Context, limit, offset int64) ([]models.KeyValue, error) {
-	id := (ctx.Value("userID")).(int64)
+	userID := (ctx.Value("userID")).(int64)
 
 	if limit == 0 {
 		return nil, fmt.Errorf("%s: %w", "limit > 0", errs.ErrBadRequest)
 	}
 
-	data, err := s.storage.List(ctx, id, limit, offset)
+	data, err := s.storage.List(ctx, userID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,9 @@ func (s *KeyValueService) Update(ctx context.Context, model models.KeyValue) err
 
 // Delete deletes a row of the data.
 func (s *KeyValueService) Delete(ctx context.Context, id int64) error {
-	if err := s.storage.Delete(ctx, id); err != nil {
+	userID := (ctx.Value("userID")).(int64)
+
+	if err := s.storage.Delete(ctx, userID, id); err != nil {
 		return err
 	}
 

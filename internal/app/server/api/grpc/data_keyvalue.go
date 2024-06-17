@@ -175,6 +175,21 @@ func (s *KeyValueServer) ListKeyValue(ctx context.Context, in *pb.ListKeyValueRe
 	}, nil
 }
 
+// DelKeyValue deletes data in the store.
+// @Success  0 OK               status & json
+// @Failure  3 InvalidArgument  status
+// @Failure 13 Internal         status
+func (s *KeyValueServer) DelKeyValue(ctx context.Context, in *pb.DelKeyValueRequest) (*pb.DelKeyValueResponse, error) {
+	if err := s.keyValueService.Delete(ctx, in.GetId()); err != nil {
+		if errors.Is(err, errs.ErrNotFound) {
+			return nil, status.Errorf(codes.NotFound, errs.MsgNotFound)
+		}
+		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
+	}
+
+	return &pb.DelKeyValueResponse{}, nil
+}
+
 // Decrypt decrypts fields.
 func (s *KeyValueServer) Decrypt(field string) (string, error) {
 	decrypted, err := s.cryptManager.Decrypt(field)

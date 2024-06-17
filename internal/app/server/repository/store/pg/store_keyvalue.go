@@ -103,7 +103,7 @@ func (s *KeyValueStorage) Update(ctx context.Context, model models.KeyValue) err
 
 	tx, err := s.db.Pool.Begin(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("pg - KeyValueStorage - Update() - s.db.Pool.Begin(): %w", err)
 	}
 	defer tx.Rollback(ctx)
 
@@ -131,7 +131,19 @@ func (s *KeyValueStorage) Update(ctx context.Context, model models.KeyValue) err
 }
 
 // Delete deletes a row of the data.
-func (s *KeyValueStorage) Delete(ctx context.Context, id int64) error {
+func (s *KeyValueStorage) Delete(ctx context.Context, userID, id int64) error {
+	newCtx, cancel := context.WithTimeout(ctx, s.queryTimeout)
+	defer cancel()
+
+	res, err := s.db.Pool.Exec(newCtx, `
+		DELETE FROM keyvalues WHERE id = $1 and user_id = $2`, id, userID)
+	if err != nil {
+		return fmt.Errorf("pg - KeyValueStorage - Delete() - s.db.Pool.Exec(): %w", err)
+	}
+
+	if res.RowsAffected() == 0 {
+		return errs.ErrNotFound
+	}
 
 	return nil
 }
