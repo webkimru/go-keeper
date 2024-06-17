@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/webkimru/go-keeper/pkg/errs"
 
 	"github.com/webkimru/go-keeper/internal/app/server/models"
 	"github.com/webkimru/go-keeper/pkg/crypt"
+	"github.com/webkimru/go-keeper/pkg/errs"
 )
+
+//go:generate mockgen -destination=mocks/mock.go -package=mocks github.com/webkimru/go-keeper/internal/app/server/service KeyValueStore
 
 // KeyValueStore is an interface to store data.
 type KeyValueStore interface {
@@ -69,9 +71,7 @@ func (s *KeyValueService) Get(ctx context.Context, id int64) (*models.KeyValue, 
 }
 
 // List returns a slice of the data.
-func (s *KeyValueService) List(ctx context.Context, limit, offset int64) ([]models.KeyValue, error) {
-	userID := (ctx.Value("userID")).(int64)
-
+func (s *KeyValueService) List(ctx context.Context, userID, limit, offset int64) ([]models.KeyValue, error) {
 	if limit == 0 {
 		return nil, fmt.Errorf("%s: %w", "limit > 0", errs.ErrBadRequest)
 	}
@@ -117,9 +117,7 @@ func (s *KeyValueService) Update(ctx context.Context, model models.KeyValue) err
 }
 
 // Delete deletes a row of the data.
-func (s *KeyValueService) Delete(ctx context.Context, id int64) error {
-	userID := (ctx.Value("userID")).(int64)
-
+func (s *KeyValueService) Delete(ctx context.Context, userID, id int64) error {
 	if err := s.storage.Delete(ctx, userID, id); err != nil {
 		return err
 	}

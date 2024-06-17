@@ -11,23 +11,23 @@ import (
 
 	"github.com/webkimru/go-keeper/internal/app/server/api/grpc/pb"
 	"github.com/webkimru/go-keeper/internal/app/server/models"
-	"github.com/webkimru/go-keeper/pkg/crypt"
 	"github.com/webkimru/go-keeper/pkg/errs"
 )
+
+//go:generate mockgen -destination=mocks/mock.go -package=mocks github.com/webkimru/go-keeper/internal/app/server/api/grpc KeyValueService
 
 // KeyValueService is an interface to store data.
 type KeyValueService interface {
 	Add(ctx context.Context, model models.KeyValue) error
 	Get(ctx context.Context, id int64) (*models.KeyValue, error)
-	List(ctx context.Context, limit, offset int64) ([]models.KeyValue, error)
+	List(ctx context.Context, UserID, limit, offset int64) ([]models.KeyValue, error)
 	Update(ctx context.Context, model models.KeyValue) error
-	Delete(ctx context.Context, id int64) error
+	Delete(ctx context.Context, UserID, id int64) error
 }
 
 // KeyValueServer is the server for data.
 type KeyValueServer struct {
 	keyValueService KeyValueService
-	cryptManager    *crypt.Crypt
 	// Must be embedded to have forward compatible implementations
 	pb.UnimplementedKeyValueServiceServer
 }
@@ -140,7 +140,9 @@ func (s *KeyValueServer) UpdateKeyValue(ctx context.Context, in *pb.UpdateKeyVal
 // @Failure  3 InvalidArgument  status
 // @Failure 13 Internal         status
 func (s *KeyValueServer) ListKeyValue(ctx context.Context, in *pb.ListKeyValueRequest) (*pb.ListKeyValueResponse, error) {
-	data, err := s.keyValueService.List(ctx, in.GetLimit(), in.GetOffset())
+	userID := (ctx.Value("userID")).(int64)
+
+	data, err := s.keyValueService.List(ctx, userID, in.GetLimit(), in.GetOffset())
 	if err != nil {
 		if errors.Is(err, errs.ErrBadRequest) {
 			return nil, status.Errorf(codes.InvalidArgument, s.fieldMessage(errs.MsgFieldRequired, err))
@@ -167,11 +169,13 @@ func (s *KeyValueServer) ListKeyValue(ctx context.Context, in *pb.ListKeyValueRe
 }
 
 // DelKeyValue deletes data in the store.
-// @Success  0 OK               status & json
-// @Failure  3 InvalidArgument  status
-// @Failure 13 Internal         status
+// @Success  0 OK         status & json
+// @Failure  5 NotFound   status
+// @Failure 13 Internal   status
 func (s *KeyValueServer) DelKeyValue(ctx context.Context, in *pb.DelKeyValueRequest) (*pb.DelKeyValueResponse, error) {
-	if err := s.keyValueService.Delete(ctx, in.GetId()); err != nil {
+	userID := (ctx.Value("userID")).(int64)
+
+	if err := s.keyValueService.Delete(ctx, userID, in.GetId()); err != nil {
 		if errors.Is(err, errs.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, errs.MsgNotFound)
 		}
@@ -179,14 +183,4 @@ func (s *KeyValueServer) DelKeyValue(ctx context.Context, in *pb.DelKeyValueRequ
 	}
 
 	return &pb.DelKeyValueResponse{}, nil
-}
-
-// Decrypt decrypts fields.
-func (s *KeyValueServer) Decrypt(field string) (string, error) {
-	decrypted, err := s.cryptManager.Decrypt(field)
-	if err != nil {
-		return "", fmt.Errorf("KeyValueServer - ListKeyValue - s.cryptManager.Decrypt(%s): %w", field, err)
-	}
-
-	return decrypted, nil
 }

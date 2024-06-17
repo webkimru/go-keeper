@@ -17,6 +17,7 @@ const (
 var (
 	ErrAlreadyExists    = errors.New("already exists")
 	ErrBadRequest       = errors.New("bad request")
+	ErrInternalServer   = errors.New("internal server error")
 	ErrNotFound         = errors.New("not found")
 	ErrPermissionDenied = errors.New("permission denied")
 )

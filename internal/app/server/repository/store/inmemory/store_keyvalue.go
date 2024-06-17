@@ -58,7 +58,7 @@ func (s *KeyValueStorage) Get(ctx context.Context, id int64) (*models.KeyValue, 
 }
 
 // List returns a slice of the data.
-func (s *KeyValueStorage) List(ctx context.Context) ([]models.KeyValue, error) {
+func (s *KeyValueStorage) List(ctx context.Context, UserID, limit, offset int64) ([]models.KeyValue, error) {
 
 	return nil, nil
 }
@@ -70,7 +70,7 @@ func (s *KeyValueStorage) Update(ctx context.Context, model models.KeyValue) err
 }
 
 // Delete deletes a row of the data.
-func (s *KeyValueStorage) Delete(ctx context.Context, id int64) error {
+func (s *KeyValueStorage) Delete(ctx context.Context, UserID, id int64) error {
 
 	return nil
 }
