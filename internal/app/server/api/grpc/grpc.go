@@ -8,6 +8,7 @@ import (
 	"github.com/webkimru/go-keeper/internal/app/server/api/grpc/middleware"
 	"github.com/webkimru/go-keeper/internal/app/server/api/grpc/pb"
 	"github.com/webkimru/go-keeper/internal/app/server/config"
+	"github.com/webkimru/go-keeper/pkg/crypt"
 	"github.com/webkimru/go-keeper/pkg/grpcserver"
 	"github.com/webkimru/go-keeper/pkg/jwtmanager"
 	"github.com/webkimru/go-keeper/pkg/logger"
@@ -17,6 +18,7 @@ func New(
 	userService UserService,
 	keyValueService KeyValueService,
 	jwtManager *jwtmanager.JWTManager,
+	cryptManager *crypt.Crypt,
 	cfg *config.Config,
 	l *logger.Log,
 ) *grpcserver.Server {
@@ -26,9 +28,7 @@ func New(
 		jwtManager,
 	)
 	// key-value server description
-	keyValueServer := NewKeyValueServer(
-		keyValueService,
-	)
+	keyValueServer := NewKeyValueServer(keyValueService, cryptManager)
 	interceptor := middleware.NewAuthInterceptor(jwtManager)
 	serverOptions := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(

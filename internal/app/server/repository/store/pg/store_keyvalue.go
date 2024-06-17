@@ -75,9 +75,25 @@ func (s *KeyValueStorage) Get(ctx context.Context, id int64) (*models.KeyValue, 
 }
 
 // List returns a slice of the data.
-func (s *KeyValueStorage) List(ctx context.Context) ([]models.KeyValue, error) {
+func (s *KeyValueStorage) List(ctx context.Context, id, limit, offset int64) ([]models.KeyValue, error) {
+	newCtx, cancel := context.WithTimeout(ctx, s.queryTimeout)
+	defer cancel()
 
-	return nil, nil
+	rows, err := s.db.Pool.Query(newCtx, `
+		SELECT (id, user_id, title, key, value)
+			FROM keyvalues
+				WHERE user_id = $1
+					LIMIT $2 OFFSET $3`, id, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("pg - KeyValueStorage - List() - s.db.Pool.Query(): %w", err)
+	}
+
+	res, err := pgx.CollectRows(rows, pgx.RowTo[models.KeyValue])
+	if err != nil {
+		return nil, fmt.Errorf("pg - KeyValueStorage - List() - pgx.CollectRows(): %w", err)
+	}
+
+	return res, nil
 }
 
 // Update updates a row of the data.

@@ -15,7 +15,7 @@ type UserStore interface {
 type KeyValueStore interface {
 	Add(ctx context.Context, kv models.KeyValue) error
 	Get(ctx context.Context, id int64) (*models.KeyValue, error)
-	List(ctx context.Context) ([]models.KeyValue, error)
+	List(ctx context.Context, limit, offset int64) ([]models.KeyValue, error)
 	Update(ctx context.Context, model models.KeyValue) error
 	Delete(ctx context.Context, id int64) error
 }

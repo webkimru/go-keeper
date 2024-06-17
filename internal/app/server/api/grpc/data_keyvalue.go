@@ -11,6 +11,7 @@ import (
 
 	"github.com/webkimru/go-keeper/internal/app/server/api/grpc/pb"
 	"github.com/webkimru/go-keeper/internal/app/server/models"
+	"github.com/webkimru/go-keeper/pkg/crypt"
 	"github.com/webkimru/go-keeper/pkg/errs"
 )
 
@@ -18,7 +19,7 @@ import (
 type KeyValueService interface {
 	Add(ctx context.Context, model models.KeyValue) error
 	Get(ctx context.Context, id int64) (*models.KeyValue, error)
-	List(ctx context.Context) ([]models.KeyValue, error)
+	List(ctx context.Context, limit, offset int64) ([]models.KeyValue, error)
 	Update(ctx context.Context, model models.KeyValue) error
 	Delete(ctx context.Context, id int64) error
 }
@@ -26,13 +27,14 @@ type KeyValueService interface {
 // KeyValueServer is the server for data.
 type KeyValueServer struct {
 	keyValueService KeyValueService
+	cryptManager    *crypt.Crypt
 	// Must be embedded to have forward compatible implementations
 	pb.UnimplementedKeyValueServiceServer
 }
 
 // NewKeyValueServer returns a new data server.
-func NewKeyValueServer(keyValueService KeyValueService) *KeyValueServer {
-	return &KeyValueServer{keyValueService: keyValueService}
+func NewKeyValueServer(keyValueService KeyValueService, cryptManager *crypt.Crypt) *KeyValueServer {
+	return &KeyValueServer{keyValueService: keyValueService, cryptManager: cryptManager}
 }
 
 // AddKeyValue saves data to the store.
@@ -102,7 +104,7 @@ func (s *KeyValueServer) fieldMessage(mess string, err error) string {
 
 // UpdateKeyValue updates data in the store.
 // @Success  0 OK               status & json
-// @Failure  3 InvalidArgument status
+// @Failure  3 InvalidArgument  status
 // @Failure  5 NotFound         status
 // @Failure  7 PermissionDenied status
 // @Failure 13 Internal         status
@@ -131,4 +133,54 @@ func (s *KeyValueServer) UpdateKeyValue(ctx context.Context, in *pb.UpdateKeyVal
 	}
 
 	return &pb.UpdateKeyValueResponse{}, nil
+}
+
+// ListKeyValue updates data in the store.
+// @Success  0 OK               status & json
+// @Failure  3 InvalidArgument  status
+// @Failure 13 Internal         status
+func (s *KeyValueServer) ListKeyValue(ctx context.Context, in *pb.ListKeyValueRequest) (*pb.ListKeyValueResponse, error) {
+	data, err := s.keyValueService.List(ctx, in.GetLimit(), in.GetOffset())
+	if err != nil {
+		if errors.Is(err, errs.ErrBadRequest) {
+			return nil, status.Errorf(codes.InvalidArgument, s.fieldMessage(errs.MsgFieldRequired, err))
+		}
+
+		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
+	}
+
+	var count int32
+	var slice []*pb.KeyValue
+	for i, item := range data {
+		count = int32(i)
+		// decrypt
+		if item.Key, err = s.Decrypt(item.Key); err != nil {
+			return nil, err
+		}
+		if item.Value, err = s.Decrypt(item.Value); err != nil {
+			return nil, err
+		}
+		// prepare data for the unary response *pb.ListKeyValueResponse
+		slice = append(slice, &pb.KeyValue{
+			Id:    int32(item.ID),
+			Title: item.Title,
+			Key:   item.Key,
+			Value: item.Value,
+		})
+	}
+
+	return &pb.ListKeyValueResponse{
+		Count: count + 1, // for i - start from 0 => +1
+		Data:  slice,
+	}, nil
+}
+
+// Decrypt decrypts fields.
+func (s *KeyValueServer) Decrypt(field string) (string, error) {
+	decrypted, err := s.cryptManager.Decrypt(field)
+	if err != nil {
+		return "", fmt.Errorf("KeyValueServer - ListKeyValue - s.cryptManager.Decrypt(%s): %w", field, err)
+	}
+
+	return decrypted, nil
 }

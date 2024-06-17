@@ -63,7 +63,7 @@ func Run(cfg *config.Config) {
 	// - userServer to store the users
 	// - keyValueServer to store key-value data: login/pass
 	l.Log.Infof("Starting gRPC server on %s", cfg.GRPC.Address)
-	server := grpc.New(userService, keyValueService, jwtManager, cfg, l)
+	server := grpc.New(userService, keyValueService, jwtManager, cryptManager, cfg, l)
 
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)

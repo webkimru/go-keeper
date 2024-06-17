@@ -13,7 +13,7 @@ import (
 type KeyValueStore interface {
 	Add(ctx context.Context, model models.KeyValue) error
 	Get(ctx context.Context, id int64) (*models.KeyValue, error)
-	List(ctx context.Context) ([]models.KeyValue, error)
+	List(ctx context.Context, id, limit, offset int64) ([]models.KeyValue, error)
 	Update(ctx context.Context, model models.KeyValue) error
 	Delete(ctx context.Context, id int64) error
 }
@@ -69,8 +69,14 @@ func (s *KeyValueService) Get(ctx context.Context, id int64) (*models.KeyValue, 
 }
 
 // List returns a slice of the data.
-func (s *KeyValueService) List(ctx context.Context) ([]models.KeyValue, error) {
-	data, err := s.storage.List(ctx)
+func (s *KeyValueService) List(ctx context.Context, limit, offset int64) ([]models.KeyValue, error) {
+	id := (ctx.Value("userID")).(int64)
+
+	if limit == 0 {
+		return nil, fmt.Errorf("%s: %w", "limit > 0", errs.ErrBadRequest)
+	}
+
+	data, err := s.storage.List(ctx, id, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +110,7 @@ func (s *KeyValueService) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
+// Decrypt decrypts fields.
 func (s *KeyValueService) Decrypt(field string) (string, error) {
 	decrypted, err := s.cryptManager.Decrypt(field)
 	if err != nil {
