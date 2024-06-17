@@ -33,8 +33,8 @@ type KeyValueServer struct {
 }
 
 // NewKeyValueServer returns a new data server.
-func NewKeyValueServer(keyValueService KeyValueService, cryptManager *crypt.Crypt) *KeyValueServer {
-	return &KeyValueServer{keyValueService: keyValueService, cryptManager: cryptManager}
+func NewKeyValueServer(keyValueService KeyValueService) *KeyValueServer {
+	return &KeyValueServer{keyValueService: keyValueService}
 }
 
 // AddKeyValue saves data to the store.
@@ -149,17 +149,8 @@ func (s *KeyValueServer) ListKeyValue(ctx context.Context, in *pb.ListKeyValueRe
 		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
 	}
 
-	var count int32
 	var slice []*pb.KeyValue
-	for i, item := range data {
-		count = int32(i)
-		// decrypt
-		if item.Key, err = s.Decrypt(item.Key); err != nil {
-			return nil, err
-		}
-		if item.Value, err = s.Decrypt(item.Value); err != nil {
-			return nil, err
-		}
+	for _, item := range data {
 		// prepare data for the unary response *pb.ListKeyValueResponse
 		slice = append(slice, &pb.KeyValue{
 			Id:    int32(item.ID),
@@ -170,7 +161,7 @@ func (s *KeyValueServer) ListKeyValue(ctx context.Context, in *pb.ListKeyValueRe
 	}
 
 	return &pb.ListKeyValueResponse{
-		Count: count + 1, // for i - start from 0 => +1
+		Count: int32(len(data)),
 		Data:  slice,
 	}, nil
 }

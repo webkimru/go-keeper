@@ -81,7 +81,22 @@ func (s *KeyValueService) List(ctx context.Context, limit, offset int64) ([]mode
 		return nil, err
 	}
 
-	return data, nil
+	// decrypt
+	var slice []models.KeyValue
+	for _, item := range data {
+		if item.Key, err = s.Decrypt(item.Key); err != nil {
+			return nil, err
+		}
+		if item.Value, err = s.Decrypt(item.Value); err != nil {
+			return nil, err
+		}
+		slice = append(slice, models.KeyValue{
+			Key:   item.Key,
+			Value: item.Value,
+		})
+	}
+
+	return slice, nil
 }
 
 // Update updates a row of the data.
