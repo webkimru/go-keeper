@@ -2,7 +2,6 @@ package inmemory
 
 import (
 	"context"
-	"log"
 	"sync"
 
 	"github.com/webkimru/go-keeper/internal/app/server/models"
@@ -27,7 +26,6 @@ func (s *KeyValueStorage) Add(ctx context.Context, model models.KeyValue) error 
 
 	if _, init := s.keyValue[model.UserID][1]; !init {
 		s.keyValue[model.UserID] = make(map[int64]models.KeyValue)
-		log.Println("init")
 	}
 	if _, exist := s.keyValue[model.UserID][model.ID]; exist {
 		return errs.ErrAlreadyExists
@@ -36,7 +34,6 @@ func (s *KeyValueStorage) Add(ctx context.Context, model models.KeyValue) error 
 	idx := int64(len(s.keyValue[model.UserID]) + 1)
 	model.ID = idx
 	s.keyValue[model.UserID][idx] = model
-	log.Printf("%v", s.keyValue)
 
 	return nil
 }

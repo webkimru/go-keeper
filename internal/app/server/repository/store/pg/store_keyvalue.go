@@ -59,7 +59,7 @@ func (s *KeyValueStorage) Get(ctx context.Context, id int64) (*models.KeyValue, 
 	err := res.Scan(&dbID, &dbUserID, &dbTitle, &dbKey, &dbValue)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, errs.ErrNotFound
+			return nil, fmt.Errorf("pg - KeyValueStorage - Get() - pgx.ErrNoRows: %w", errs.ErrNotFound)
 		}
 
 		return nil, fmt.Errorf("pg - KeyValueStorage - Get() - s.db.Pool.QueryRow(): %w", err)
@@ -117,14 +117,14 @@ func (s *KeyValueStorage) Update(ctx context.Context, model models.KeyValue) err
 	err = res.Scan(&dbUserID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return errs.ErrNotFound
+			return fmt.Errorf("pg - KeyValueStorage - Update() - pgx.ErrNoRows: %w", errs.ErrNotFound)
 		}
 
 		return fmt.Errorf("pg - KeyValueStorage - Update() - res.Scan(): %w", err)
 	}
 
 	if dbUserID != model.UserID {
-		return errs.ErrPermissionDenied
+		return fmt.Errorf("pg - KeyValueStorage - Update() - dbUserID is not equal model.UserID: %w", errs.ErrPermissionDenied)
 	}
 
 	return tx.Commit(ctx)
@@ -142,7 +142,7 @@ func (s *KeyValueStorage) Delete(ctx context.Context, userID, id int64) error {
 	}
 
 	if res.RowsAffected() == 0 {
-		return errs.ErrNotFound
+		return fmt.Errorf("pg - KeyValueStorage - Delete() - res.RowsAffected(): %w", errs.ErrNotFound)
 	}
 
 	return nil
