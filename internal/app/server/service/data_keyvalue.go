@@ -9,7 +9,7 @@ import (
 	"github.com/webkimru/go-keeper/pkg/errs"
 )
 
-//go:generate mockgen -destination=mocks/mock.go -package=mocks github.com/webkimru/go-keeper/internal/app/server/service KeyValueStore
+//go:generate mockgen -destination=mocks/mock_keyvalue.go -package=mocks github.com/webkimru/go-keeper/internal/app/server/service KeyValueStore
 
 // KeyValueStore is an interface to store data.
 type KeyValueStore interface {

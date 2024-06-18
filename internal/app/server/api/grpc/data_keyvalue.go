@@ -14,7 +14,7 @@ import (
 	"github.com/webkimru/go-keeper/pkg/errs"
 )
 
-//go:generate mockgen -destination=mocks/mock.go -package=mocks github.com/webkimru/go-keeper/internal/app/server/api/grpc KeyValueService
+//go:generate mockgen -destination=mocks/mock_keyvalue.go -package=mocks github.com/webkimru/go-keeper/internal/app/server/api/grpc KeyValueService
 
 // KeyValueService is an interface to store data.
 type KeyValueService interface {
