@@ -22,6 +22,7 @@ func New(address string, option ...grpc.ServerOption) (*Server, error) {
 	s := &Server{
 		Listen: listen,
 		Server: grpc.NewServer(option...),
+		notify: make(chan error, 1),
 	}
 
 	return s, nil
