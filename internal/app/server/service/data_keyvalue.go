@@ -82,7 +82,7 @@ func (s *KeyValueService) List(ctx context.Context, userID, limit, offset int64)
 	}
 
 	// decrypt
-	var slice []models.KeyValue
+	slice := make([]models.KeyValue, len(data))
 	for _, item := range data {
 		if item.Key, err = s.Decrypt(item.Key); err != nil {
 			return nil, err

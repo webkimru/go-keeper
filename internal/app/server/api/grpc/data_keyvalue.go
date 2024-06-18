@@ -166,7 +166,7 @@ func (s *KeyValueServer) ListKeyValue(ctx context.Context, in *pb.ListKeyValueRe
 		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
 	}
 
-	var slice []*pb.KeyValue
+	slice := make([]*pb.KeyValue, len(data))
 	for _, item := range data {
 		// prepare data for the unary response *pb.ListKeyValueResponse
 		slice = append(slice, &pb.KeyValue{
