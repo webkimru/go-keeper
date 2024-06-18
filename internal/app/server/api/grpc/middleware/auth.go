@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"sync"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -13,14 +14,15 @@ import (
 )
 
 type AuthInterceptor struct {
+	m              sync.Mutex
 	jwtManager     *jwtmanager.JWTManager
 	accessiblePath map[string]struct{}
 }
 
 func NewAuthInterceptor(j *jwtmanager.JWTManager) *AuthInterceptor {
 	return &AuthInterceptor{
-		j,
-		map[string]struct{}{
+		jwtManager: j,
+		accessiblePath: map[string]struct{}{
 			"/kim.gokeeper.UserService/Login":    {},
 			"/kim.gokeeper.UserService/Register": {},
 		},
@@ -30,6 +32,8 @@ func NewAuthInterceptor(j *jwtmanager.JWTManager) *AuthInterceptor {
 func (u *AuthInterceptor) UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	var token string
 
+	u.m.Lock()
+	defer u.m.Unlock()
 	if _, ok := u.accessiblePath[info.FullMethod]; ok {
 		return handler(ctx, req)
 	}
