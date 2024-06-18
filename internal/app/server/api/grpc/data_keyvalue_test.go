@@ -24,7 +24,7 @@ func testSetup(t *testing.T) (ctx context.Context, m *mocks.MockKeyValueService)
 	m = mocks.NewMockKeyValueService(ctrl)
 
 	ctx = context.Background()
-	ctx = context.WithValue(ctx, "userID", int64(1))
+	ctx = context.WithValue(ctx, models.ContextKey("userID"), int64(1))
 
 	return ctx, m
 }

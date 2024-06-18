@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
+	"github.com/webkimru/go-keeper/internal/app/server/models"
 	"github.com/webkimru/go-keeper/pkg/jwtmanager"
 )
 
@@ -48,7 +49,7 @@ func (u *AuthInterceptor) UnaryAuthInterceptor(ctx context.Context, req interfac
 		return nil, status.Error(codes.Unauthenticated, "Invalid token")
 	}
 
-	ctx = context.WithValue(ctx, "userID", userID)
+	ctx = context.WithValue(ctx, models.ContextKey("userID"), userID)
 
 	return handler(ctx, req)
 }

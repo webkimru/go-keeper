@@ -43,7 +43,10 @@ func (s *KeyValueStorage) Add(ctx context.Context, model models.KeyValue) error 
 
 // Get returns a row of the data.
 func (s *KeyValueStorage) Get(ctx context.Context, id int64) (*models.KeyValue, error) {
-	userID := ctx.Value("userID").(int64)
+	userID := s.getContextUserID(ctx)
+	if userID == -1 {
+		return nil, errs.ErrPermissionDenied
+	}
 
 	if _, exist := s.keyValue[userID]; !exist {
 		return nil, errs.ErrNotFound
@@ -73,4 +76,16 @@ func (s *KeyValueStorage) Update(ctx context.Context, model models.KeyValue) err
 func (s *KeyValueStorage) Delete(ctx context.Context, UserID, id int64) error {
 
 	return nil
+}
+
+func (s *KeyValueStorage) getContextUserID(ctx context.Context) int64 {
+	id := ctx.Value(models.ContextKey("userID"))
+
+	switch id := id.(type) {
+	case int64:
+		return id
+
+	default:
+		return -1
+	}
 }

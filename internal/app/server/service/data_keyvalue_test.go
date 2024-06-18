@@ -20,7 +20,7 @@ func testSetup(t *testing.T) (ctx context.Context, m *mocks.MockKeyValueStore) {
 	m = mocks.NewMockKeyValueStore(ctrl)
 
 	ctx = context.Background()
-	ctx = context.WithValue(ctx, "userID", int64(1))
+	ctx = context.WithValue(ctx, models.ContextKey("userID"), int64(1))
 
 	return ctx, m
 }
@@ -31,7 +31,7 @@ func TestKeyValueService_Add(t *testing.T) {
 	assert.NoError(t, err)
 
 	// case 3
-	ctxErrStore := context.WithValue(ctx, "error", "an error")
+	ctxErrStore := context.WithValue(ctx, models.ContextKey("error"), "an error")
 	errStore := errors.New("an error")
 
 	m.EXPECT().Add(ctx, gomock.Any()).Return(nil)
@@ -66,7 +66,7 @@ func TestKeyValueService_Get(t *testing.T) {
 	cryptManager, err := crypt.New("secret")
 	assert.NoError(t, err)
 
-	ctxPermissionDenied := context.WithValue(ctx, "userID", int64(0))
+	ctxPermissionDenied := context.WithValue(ctx, models.ContextKey("userID"), int64(0))
 	errCustom := errors.New("an error")
 
 	m.EXPECT().Get(ctx, int64(1)).Return(&models.KeyValue{
@@ -164,7 +164,7 @@ func TestKeyValueService_Update(t *testing.T) {
 	assert.NoError(t, err)
 
 	errStore := errors.New("an error")
-	ctxErrStore := context.WithValue(ctx, "error", "an error")
+	ctxErrStore := context.WithValue(ctx, models.ContextKey("error"), "an error")
 
 	m.EXPECT().Update(ctx, gomock.Any()).Return(nil)
 	m.EXPECT().Update(ctx, models.KeyValue{}).Return(nil)

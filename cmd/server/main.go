@@ -26,12 +26,10 @@ func main() {
 	log.Printf("** Build commit: %s", buildCommit)
 	log.Printf("******************************************")
 
-	// Configuration
 	cfg, err := config.New()
 	if err != nil {
 		log.Fatalf("Config error: %s", err)
 	}
 
-	// Run
 	app.Run(cfg)
 }

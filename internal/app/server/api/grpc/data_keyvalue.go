@@ -38,13 +38,19 @@ func NewKeyValueServer(keyValueService KeyValueService) *KeyValueServer {
 }
 
 // AddKeyValue saves data to the store.
-// @Success  0 OK              status & json
-// @Failure  3 InvalidArgument status
-// @Failure  6 AlreadyExists   status
-// @Failure 13 Internal        status
+// @Success  0 OK               status & json
+// @Failure  3 InvalidArgument  status
+// @Failure  6 AlreadyExists    status
+// @Failure  7 PermissionDenied status
+// @Failure 13 Internal         status
 func (s *KeyValueServer) AddKeyValue(ctx context.Context, in *pb.AddKeyValueRequest) (*pb.AddKeyValueResponse, error) {
+	userID := s.getContextUserID(ctx)
+	if userID == -1 {
+		return nil, status.Errorf(codes.PermissionDenied, errs.MsgPermissionDenied)
+	}
+
 	data := &models.KeyValue{
-		UserID: (ctx.Value("userID")).(int64),
+		UserID: userID,
 		Title:  in.GetData().GetTitle(),
 		Key:    in.GetData().GetKey(),
 		Value:  in.GetData().GetValue(),
@@ -109,9 +115,14 @@ func (s *KeyValueServer) fieldMessage(mess string, err error) string {
 // @Failure  7 PermissionDenied status
 // @Failure 13 Internal         status
 func (s *KeyValueServer) UpdateKeyValue(ctx context.Context, in *pb.UpdateKeyValueRequest) (*pb.UpdateKeyValueResponse, error) {
+	userID := s.getContextUserID(ctx)
+	if userID == -1 {
+		return nil, status.Errorf(codes.PermissionDenied, errs.MsgPermissionDenied)
+	}
+
 	data := &models.KeyValue{
 		ID:     in.GetId(),
-		UserID: (ctx.Value("userID")).(int64),
+		UserID: userID,
 		Title:  in.GetData().GetTitle(),
 		Key:    in.GetData().GetKey(),
 		Value:  in.GetData().GetValue(),
@@ -138,9 +149,13 @@ func (s *KeyValueServer) UpdateKeyValue(ctx context.Context, in *pb.UpdateKeyVal
 // ListKeyValue updates data in the store.
 // @Success  0 OK               status & json
 // @Failure  3 InvalidArgument  status
+// @Failure  7 PermissionDenied status
 // @Failure 13 Internal         status
 func (s *KeyValueServer) ListKeyValue(ctx context.Context, in *pb.ListKeyValueRequest) (*pb.ListKeyValueResponse, error) {
-	userID := (ctx.Value("userID")).(int64)
+	userID := s.getContextUserID(ctx)
+	if userID == -1 {
+		return nil, status.Errorf(codes.PermissionDenied, errs.MsgPermissionDenied)
+	}
 
 	data, err := s.keyValueService.List(ctx, userID, in.GetLimit(), in.GetOffset())
 	if err != nil {
@@ -169,11 +184,15 @@ func (s *KeyValueServer) ListKeyValue(ctx context.Context, in *pb.ListKeyValueRe
 }
 
 // DelKeyValue deletes data in the store.
-// @Success  0 OK         status & json
-// @Failure  5 NotFound   status
-// @Failure 13 Internal   status
+// @Success  0 OK               status & json
+// @Failure  5 NotFound         status
+// @Failure  7 PermissionDenied status
+// @Failure 13 Internal         status
 func (s *KeyValueServer) DelKeyValue(ctx context.Context, in *pb.DelKeyValueRequest) (*pb.DelKeyValueResponse, error) {
-	userID := (ctx.Value("userID")).(int64)
+	userID := s.getContextUserID(ctx)
+	if userID == -1 {
+		return nil, status.Errorf(codes.PermissionDenied, errs.MsgPermissionDenied)
+	}
 
 	if err := s.keyValueService.Delete(ctx, userID, in.GetId()); err != nil {
 		if errors.Is(err, errs.ErrNotFound) {
@@ -183,4 +202,16 @@ func (s *KeyValueServer) DelKeyValue(ctx context.Context, in *pb.DelKeyValueRequ
 	}
 
 	return &pb.DelKeyValueResponse{}, nil
+}
+
+func (s *KeyValueServer) getContextUserID(ctx context.Context) int64 {
+	id := ctx.Value(models.ContextKey("userID"))
+
+	switch id := id.(type) {
+	case int64:
+		return id
+
+	default:
+		return -1
+	}
 }

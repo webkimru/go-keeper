@@ -49,5 +49,19 @@ func (k *KeyValue) valid(field string) bool {
 }
 
 func (k *KeyValue) CanAccess(ctx context.Context) bool {
-	return k.UserID == (ctx.Value("userID")).(int64)
+	return k.UserID == k.getContextUserID(ctx)
+}
+
+type ContextKey string
+
+func (k *KeyValue) getContextUserID(ctx context.Context) int64 {
+	id := ctx.Value(ContextKey("userID"))
+
+	switch id := id.(type) {
+	case int64:
+		return id
+
+	default:
+		return -1
+	}
 }
