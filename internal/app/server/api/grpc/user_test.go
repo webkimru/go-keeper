@@ -17,8 +17,9 @@ import (
 )
 
 func TestUserServer_Register(t *testing.T) {
+	userService := service.NewUserService(inmemory.NewUserStorage())
 	s := &UserServer{
-		userService: inmemory.NewUserStorage(),
+		userService: userService,
 		jwtManager:  jwtmanager.New("secret", 1),
 	}
 	tests := []struct {

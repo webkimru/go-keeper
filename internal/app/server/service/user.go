@@ -2,8 +2,12 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/webkimru/go-keeper/internal/app/server/models"
+	"github.com/webkimru/go-keeper/pkg/errs"
 )
+
+//go:generate mockgen -destination=mocks/mock_user.go -package=mocks github.com/webkimru/go-keeper/internal/app/server/service UserStore
 
 // UserStore is an interface to store users.
 type UserStore interface {
@@ -22,24 +26,33 @@ func NewUserService(storage UserStore) *UserService {
 }
 
 // Add puts a user to the storage.
-func (s *UserService) Add(ctx context.Context, u *models.User) error {
-	user, err := models.NewUser(u.Login, u.Password)
+func (s *UserService) Add(ctx context.Context, model *models.User) error {
+	if field, err := model.Validate("login", "password"); err != nil {
+		return fmt.Errorf("UserService - Add - model.Validate(): %w: %s is required", errs.ErrBadRequest, field)
+	}
+
+	user, err := models.NewUser(model.Login, model.Password)
 	if err != nil {
-		return err
+		return fmt.Errorf("UserService - Add - models.NewUser(): %w", err)
 	}
 
 	if err = s.storage.Add(ctx, user); err != nil {
-		return err
+		return fmt.Errorf("UserService - Add - s.storage.Add(): %w", err)
 	}
 
 	return nil
 }
 
-// Find looks for a user in the storage.
-func (s *UserService) Find(ctx context.Context, login string) (*models.User, error) {
+// Find returns an existing user.
+func (s *UserService) Find(ctx context.Context, login, password string) (*models.User, error) {
+	model := models.User{Login: login, Password: password}
+	if field, err := model.Validate("login", "password"); err != nil {
+		return nil, fmt.Errorf("UserService - Find - model.Validate(): %w: %s is required", errs.ErrBadRequest, field)
+	}
+
 	user, err := s.storage.Find(ctx, login)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("UserService - Find - s.storage.Find(): %w", err)
 	}
 
 	return user, nil

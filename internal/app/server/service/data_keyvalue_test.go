@@ -30,7 +30,6 @@ func TestKeyValueService_Add(t *testing.T) {
 	cryptManager, err := crypt.New("secret")
 	assert.NoError(t, err)
 
-	// case 3
 	ctxErrStore := context.WithValue(ctx, models.ContextKey("error"), "an error")
 	errStore := errors.New("an error")
 

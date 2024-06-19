@@ -16,7 +16,7 @@ import (
 // UserService is an interface to store users.
 type UserService interface {
 	Add(ctx context.Context, user *models.User) error
-	Find(ctx context.Context, login string) (*models.User, error)
+	Find(ctx context.Context, login, password string) (*models.User, error)
 }
 
 // UserServer is the server for the authentication.
@@ -34,14 +34,18 @@ func NewUserServer(userService UserService, jwtManager *jwtmanager.JWTManager) *
 
 // Login is a unary RPC to login user.
 // @Success  0 OK              status & json
+// @Failure  3 InvalidArgument status
 // @Failure  5 NotFound        status
 // @Failure 16 Unauthenticated status
 // @Failure 13 Internal        status
 func (s *UserServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
-	user, err := s.userService.Find(ctx, in.GetLogin())
+	user, err := s.userService.Find(ctx, in.GetLogin(), in.GetPassword())
 	if err != nil {
 		if errors.Is(err, errs.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, errs.MsgNotFound)
+		}
+		if errors.Is(err, errs.ErrBadRequest) {
+			return nil, status.Errorf(codes.InvalidArgument, errs.MsgFieldRequiredError(err))
 		}
 
 		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
@@ -61,6 +65,7 @@ func (s *UserServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginR
 
 // Register is a unary RPC to creates a new user.
 // @Success  0 OK              status & json
+// @Failure  3 InvalidArgument status
 // @Failure 16 OK              json {"error": "already exists"}
 // @Failure 13 Internal        status
 func (s *UserServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
@@ -76,6 +81,9 @@ func (s *UserServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.
 		if errors.Is(err, errs.ErrAlreadyExists) {
 			response.Error = errs.MsgAlreadyExists
 			return &response, nil
+		}
+		if errors.Is(err, errs.ErrBadRequest) {
+			return nil, status.Errorf(codes.InvalidArgument, errs.MsgFieldRequiredError(err))
 		}
 
 		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))

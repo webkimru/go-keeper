@@ -25,3 +25,7 @@ var (
 func MsgInternalServerError(err error) string {
 	return fmt.Sprintf("%s: %v", MsgInternalServer, err)
 }
+
+func MsgFieldRequiredError(err error) string {
+	return fmt.Sprintf("%v", err)
+}
