@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -48,38 +49,38 @@ type Args struct {
 
 // New returns app config.
 func New() (*Config, error) {
-	cfg := &Config{}
+	var cfg Config
 
 	// Read config from flags
-	args, err := FlagArgs(cfg)
+	args, err := FlagArgs(&cfg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("config - New - FlagArgs(): %w", err)
 	}
 
 	// Read config from file
-	if err = cleanenv.ReadConfig(args.ConfigPath, cfg); args.ConfigPath != "" && err != nil {
-		return nil, err
+	if err = cleanenv.ReadConfig(args.ConfigPath, &cfg); args.ConfigPath != "" && err != nil {
+		return nil, fmt.Errorf("config - New - cleanenv.ReadConfig(): %w", err)
 	}
 
 	// Read config from ENV
-	if err = cleanenv.ReadEnv(cfg); err != nil {
-		return nil, err
+	if err = cleanenv.ReadEnv(&cfg); err != nil {
+		return nil, fmt.Errorf("config - New - cleanenv.ReadEnv(): %w", err)
 	}
 
-	return cfg, nil
+	return &cfg, nil
 }
 
 // FlagArgs processes and handles CLI arguments.
 func FlagArgs(cfg *Config) (Args, error) {
 	var a Args
-	f := flag.NewFlagSet("GophKeeper Server", flag.ContinueOnError)
+	f := flag.NewFlagSet("GophKeeper Server", 1) // debug - flag.ContinueOnError
 	f.StringVar(&a.ConfigPath, "c", "", "path to config file")
 
-	f.Usage = cleanenv.FUsage(f.Output(), &cfg, nil, f.Usage)
+	f.Usage = cleanenv.FUsage(f.Output(), cfg, nil, f.Usage)
 
 	err := f.Parse(os.Args[1:])
 	if err != nil {
-		return a, err
+		return a, fmt.Errorf("config - FlagArgs - f.Parse(): %w", err)
 	}
 
 	return a, nil
