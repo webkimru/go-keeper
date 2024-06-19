@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// KeyValue contains key-value entity information.
 type KeyValue struct {
 	ID        int64
 	UserID    int64
@@ -15,6 +16,7 @@ type KeyValue struct {
 	UpdatedAt string
 }
 
+// Validate is a wrapper over valid() to decorate errors.
 func (k *KeyValue) Validate(required ...string) (string, error) {
 	for _, field := range required {
 		if !k.valid(field) {
@@ -25,6 +27,7 @@ func (k *KeyValue) Validate(required ...string) (string, error) {
 	return "", nil
 }
 
+// valid checks entering data fields.
 func (k *KeyValue) valid(field string) bool {
 	switch field {
 	case "id":
@@ -48,12 +51,15 @@ func (k *KeyValue) valid(field string) bool {
 	return true
 }
 
+// CanAccess compares a user ID in an entering model with context user ID.
 func (k *KeyValue) CanAccess(ctx context.Context) bool {
 	return k.UserID == k.getContextUserID(ctx)
 }
 
+// ContextKey is a custom type for context usage.
 type ContextKey string
 
+// getContextUserID is a helper method to get user ID out of ctx.Value as int64.
 func (k *KeyValue) getContextUserID(ctx context.Context) int64 {
 	id := ctx.Value(ContextKey("userID"))
 

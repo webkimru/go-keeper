@@ -204,6 +204,7 @@ func (s *KeyValueServer) DelKeyValue(ctx context.Context, in *pb.DelKeyValueRequ
 	return &pb.DelKeyValueResponse{}, nil
 }
 
+// getContextUserID is a helper method to get user ID out of ctx.Value as int64
 func (s *KeyValueServer) getContextUserID(ctx context.Context) int64 {
 	id := ctx.Value(models.ContextKey("userID"))
 

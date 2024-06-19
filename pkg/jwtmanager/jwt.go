@@ -1,3 +1,4 @@
+// Package jwtmanager allows creating a new token with user ID claim ang getting it out the token.
 package jwtmanager
 
 import (

@@ -13,12 +13,14 @@ import (
 	"github.com/webkimru/go-keeper/pkg/jwtmanager"
 )
 
+// AuthInterceptor is a server interceptor for authentication and authorization
 type AuthInterceptor struct {
 	m              sync.Mutex
 	jwtManager     *jwtmanager.JWTManager
 	accessiblePath map[string]struct{}
 }
 
+// NewAuthInterceptor returns a new auth interceptor
 func NewAuthInterceptor(j *jwtmanager.JWTManager) *AuthInterceptor {
 	return &AuthInterceptor{
 		jwtManager: j,
@@ -29,6 +31,7 @@ func NewAuthInterceptor(j *jwtmanager.JWTManager) *AuthInterceptor {
 	}
 }
 
+// UnaryAuthInterceptor returns a server interceptor function to authenticate and authorize unary RPC
 func (u *AuthInterceptor) UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	var token string
 

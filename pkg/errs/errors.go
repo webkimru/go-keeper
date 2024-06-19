@@ -1,3 +1,4 @@
+// Package errs consists of the base errors and messages including wrapped errors.
 package errs
 
 import (

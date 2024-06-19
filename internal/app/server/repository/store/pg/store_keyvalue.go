@@ -13,11 +13,13 @@ import (
 	"github.com/webkimru/go-keeper/pkg/postgres"
 )
 
+// KeyValueStorage contains data storage.
 type KeyValueStorage struct {
 	db           *postgres.Postgres
 	queryTimeout time.Duration
 }
 
+// NewKeyValueStorage returns a new DB connections.
 func NewKeyValueStorage(pg *postgres.Postgres, cfg *config.Config) *KeyValueStorage {
 	return &KeyValueStorage{
 		db:           pg,

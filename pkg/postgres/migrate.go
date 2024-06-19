@@ -10,6 +10,7 @@ import (
 //go:embed migrations
 var migrations embed.FS
 
+// Migrate provides up and down migrations.
 func (p *Postgres) Migrate(version int64) error {
 	goose.SetBaseFS(migrations)
 

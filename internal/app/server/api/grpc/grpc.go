@@ -13,6 +13,7 @@ import (
 	"github.com/webkimru/go-keeper/pkg/logger"
 )
 
+// New returns a new gRPC server.
 func New(
 	userService UserService,
 	keyValueService KeyValueService,

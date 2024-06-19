@@ -1,3 +1,4 @@
+// Package grpcserver implements an grPC server.
 package grpcserver
 
 import (

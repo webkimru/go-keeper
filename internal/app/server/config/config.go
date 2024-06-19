@@ -8,7 +8,7 @@ import (
 )
 
 type (
-	// Config is an application configuration structure.
+	// Config is a general structure.
 	Config struct {
 		App  `json:"app"`
 		Log  `json:"logger"`
@@ -16,19 +16,23 @@ type (
 		PG   `json:"dsn"`
 	}
 
+	// App is an application configuration structure.
 	App struct {
 		SecretKey string `json:"secret_key" env:"APP_SECRET_KEY" env-default:"secret"`
 		TokenExp  int    `json:"token_exp" env:"APP_TOKEN_EXP" env-default:"120" env-description:"token expiration (minutes)"`
 	}
 
+	// Log is a logging structure.
 	Log struct {
 		Level string `json:"log_level" env:"LOG_LEVEL" env-default:"info"`
 	}
 
+	// GRPC is a gRPC server structure.
 	GRPC struct {
 		Address string `json:"grpc_address" env:"GRPC_ADDRESS" env-default:":3200"`
 	}
 
+	// PG is a PostgreSQL structure.
 	PG struct {
 		DatabaseDSN      string `json:"database_dsn" env:"DATABASE_DSN"`
 		MigrationVersion int64  `json:"migration_version" env:"DB_MIGRATION_VERSION" env-default:"1"`

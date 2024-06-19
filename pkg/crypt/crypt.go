@@ -1,3 +1,4 @@
+// Package crypt implements encryption and decryption
 package crypt
 
 import (
@@ -7,6 +8,7 @@ import (
 	"encoding/hex"
 )
 
+// Crypt is a structure fot encryption and decryption
 type Crypt struct {
 	Aesgcm cipher.AEAD
 	Nonce  []byte
