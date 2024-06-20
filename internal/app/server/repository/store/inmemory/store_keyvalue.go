@@ -40,6 +40,9 @@ func (s *KeyValueStorage) Add(ctx context.Context, model models.KeyValue) error 
 
 // Get returns a row of the data.
 func (s *KeyValueStorage) Get(ctx context.Context, id int64) (*models.KeyValue, error) {
+	s.m.RLock()
+	defer s.m.RUnlock()
+
 	userID := s.getContextUserID(ctx)
 	if userID == -1 {
 		return nil, errs.ErrPermissionDenied

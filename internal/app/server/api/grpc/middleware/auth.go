@@ -15,7 +15,7 @@ import (
 
 // AuthInterceptor is a server interceptor for authentication and authorization
 type AuthInterceptor struct {
-	m              sync.Mutex
+	m              sync.RWMutex
 	jwtManager     *jwtmanager.JWTManager
 	accessiblePath map[string]struct{}
 }
@@ -33,10 +33,11 @@ func NewAuthInterceptor(j *jwtmanager.JWTManager) *AuthInterceptor {
 
 // UnaryAuthInterceptor returns a server interceptor function to authenticate and authorize unary RPC
 func (u *AuthInterceptor) UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	u.m.RLock()
+	defer u.m.RUnlock()
+
 	var token string
 
-	u.m.Lock()
-	defer u.m.Unlock()
 	if _, ok := u.accessiblePath[info.FullMethod]; ok {
 		return handler(ctx, req)
 	}
