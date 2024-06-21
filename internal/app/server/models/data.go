@@ -34,6 +34,10 @@ func (k *KeyValue) valid(field string) bool {
 		if k.ID == 0 {
 			return false
 		}
+	case "user_id":
+		if k.UserID == 0 {
+			return false
+		}
 	case "title":
 		if k.Title == "" {
 			return false

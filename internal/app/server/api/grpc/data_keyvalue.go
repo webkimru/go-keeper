@@ -3,8 +3,6 @@ package grpc
 import (
 	"context"
 	"errors"
-	"fmt"
-	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -61,7 +59,7 @@ func (s *KeyValueServer) AddKeyValue(ctx context.Context, in *pb.AddKeyValueRequ
 			return nil, status.Errorf(codes.AlreadyExists, errs.MsgAlreadyExists)
 		}
 		if errors.Is(err, errs.ErrBadRequest) {
-			return nil, status.Errorf(codes.InvalidArgument, s.fieldMessage(errs.MsgFieldRequired, err))
+			return nil, status.Errorf(codes.InvalidArgument, errs.MsgFieldRequiredError(err))
 		}
 
 		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
@@ -97,17 +95,6 @@ func (s *KeyValueServer) GetKeyValue(ctx context.Context, in *pb.GetKeyValueRequ
 	}, nil
 }
 
-// fieldMessage do user-friendly errors of form fields.
-//
-//	example: field key is required
-//	example: field value is required
-//	instead: field is required
-func (s *KeyValueServer) fieldMessage(mess string, err error) string {
-	field := strings.Split(err.Error(), ":")
-
-	return strings.Replace(mess, "field", fmt.Sprintf("field %s", field[0]), 1)
-}
-
 // UpdateKeyValue updates data in the store.
 // @Success  0 OK               status & json
 // @Failure  3 InvalidArgument  status
@@ -137,7 +124,7 @@ func (s *KeyValueServer) UpdateKeyValue(ctx context.Context, in *pb.UpdateKeyVal
 			return nil, status.Errorf(codes.PermissionDenied, errs.MsgPermissionDenied)
 		}
 		if errors.Is(err, errs.ErrBadRequest) {
-			return nil, status.Errorf(codes.InvalidArgument, s.fieldMessage(errs.MsgFieldRequired, err))
+			return nil, status.Errorf(codes.InvalidArgument, errs.MsgFieldRequiredError(err))
 		}
 
 		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
@@ -160,21 +147,23 @@ func (s *KeyValueServer) ListKeyValue(ctx context.Context, in *pb.ListKeyValueRe
 	data, err := s.keyValueService.List(ctx, userID, in.GetLimit(), in.GetOffset())
 	if err != nil {
 		if errors.Is(err, errs.ErrBadRequest) {
-			return nil, status.Errorf(codes.InvalidArgument, s.fieldMessage(errs.MsgFieldRequired, err))
+			return nil, status.Errorf(codes.InvalidArgument, errs.MsgFieldRequiredError(err))
 		}
 
 		return nil, status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
 	}
 
+	n := 0
 	slice := make([]*pb.KeyValue, len(data))
 	for _, item := range data {
 		// prepare data for the unary response *pb.ListKeyValueResponse
-		slice = append(slice, &pb.KeyValue{
+		slice[n] = &pb.KeyValue{
 			Id:    int32(item.ID),
 			Title: item.Title,
 			Key:   item.Key,
 			Value: item.Value,
-		})
+		}
+		n++
 	}
 
 	return &pb.ListKeyValueResponse{

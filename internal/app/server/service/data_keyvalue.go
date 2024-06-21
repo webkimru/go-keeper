@@ -34,7 +34,7 @@ func NewKeyValueService(storage KeyValueStore, cryptManager *crypt.Crypt) *KeyVa
 // Add puts data to the storage.
 func (s *KeyValueService) Add(ctx context.Context, model models.KeyValue) error {
 	if field, err := model.Validate("title", "key", "value"); err != nil {
-		return fmt.Errorf("KeyValueService - Add - model.Validate() - %s: %w", field, errs.ErrBadRequest)
+		return fmt.Errorf("KeyValueService - Add - model.Validate(): %w: %s is required", errs.ErrBadRequest, field)
 	}
 
 	// encrypt
@@ -50,10 +50,17 @@ func (s *KeyValueService) Add(ctx context.Context, model models.KeyValue) error 
 
 // Get returns a row of the data.
 func (s *KeyValueService) Get(ctx context.Context, id int64) (*models.KeyValue, error) {
+	// validate
+	model := models.KeyValue{ID: id}
+	if field, err := model.Validate("id"); err != nil {
+		return nil, fmt.Errorf("KeyValueService - Get - model.Validate(): %w: %s is required", errs.ErrBadRequest, field)
+	}
+
 	data, err := s.storage.Get(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("KeyValueService - Get - s.storage.Get(): %w", err)
 	}
+
 	// check access
 	if !data.CanAccess(ctx) {
 		return nil, fmt.Errorf("KeyValueService - Get - data.CanAccess(): %w", errs.ErrPermissionDenied)
@@ -72,8 +79,13 @@ func (s *KeyValueService) Get(ctx context.Context, id int64) (*models.KeyValue, 
 
 // List returns a slice of the data.
 func (s *KeyValueService) List(ctx context.Context, userID, limit, offset int64) ([]models.KeyValue, error) {
+	// validate
+	model := models.KeyValue{UserID: userID}
+	if field, err := model.Validate("user_id"); err != nil {
+		return nil, fmt.Errorf("KeyValueService - List - model.Validate(): %w: %s is required", errs.ErrBadRequest, field)
+	}
 	if limit == 0 {
-		return nil, fmt.Errorf("KeyValueService - List - limit: %w", errs.ErrBadRequest)
+		return nil, fmt.Errorf("KeyValueService - List: %w: limit must be > 0", errs.ErrBadRequest)
 	}
 
 	data, err := s.storage.List(ctx, userID, limit, offset)
@@ -83,6 +95,7 @@ func (s *KeyValueService) List(ctx context.Context, userID, limit, offset int64)
 
 	// decrypt
 	slice := make([]models.KeyValue, len(data))
+	n := 0
 	for _, item := range data {
 		if item.Key, err = s.Decrypt(item.Key); err != nil {
 			return nil, fmt.Errorf("KeyValueService - List - s.Decrypt(item.Key): %w", err)
@@ -90,10 +103,8 @@ func (s *KeyValueService) List(ctx context.Context, userID, limit, offset int64)
 		if item.Value, err = s.Decrypt(item.Value); err != nil {
 			return nil, fmt.Errorf("KeyValueService - List - s.Decrypt(item.Value): %w", err)
 		}
-		slice = append(slice, models.KeyValue{
-			Key:   item.Key,
-			Value: item.Value,
-		})
+		slice[n] = item
+		n++
 	}
 
 	return slice, nil
@@ -102,7 +113,7 @@ func (s *KeyValueService) List(ctx context.Context, userID, limit, offset int64)
 // Update updates a row of the data.
 func (s *KeyValueService) Update(ctx context.Context, model models.KeyValue) error {
 	if field, err := model.Validate("id", "title", "key", "value"); err != nil {
-		return fmt.Errorf("KeyValueService - Update - model.Validate() - %s: %w", field, errs.ErrBadRequest)
+		return fmt.Errorf("KeyValueService - Update - model.Validate(): %w: %s is required", errs.ErrBadRequest, field)
 	}
 
 	// encrypt
@@ -118,6 +129,12 @@ func (s *KeyValueService) Update(ctx context.Context, model models.KeyValue) err
 
 // Delete deletes a row of the data.
 func (s *KeyValueService) Delete(ctx context.Context, userID, id int64) error {
+	// validate
+	model := models.KeyValue{ID: id, UserID: userID}
+	if field, err := model.Validate("user_id", "id"); err != nil {
+		return fmt.Errorf("KeyValueService - Delete - model.Validate(): %w: %s is required", errs.ErrBadRequest, field)
+	}
+
 	if err := s.storage.Delete(ctx, userID, id); err != nil {
 		return fmt.Errorf("KeyValueService - Delete - s.storage.Delete(): %w", err)
 	}

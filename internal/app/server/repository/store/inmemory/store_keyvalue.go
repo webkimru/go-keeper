@@ -2,6 +2,7 @@ package inmemory
 
 import (
 	"context"
+	"sort"
 	"sync"
 
 	"github.com/webkimru/go-keeper/internal/app/server/models"
@@ -61,19 +62,63 @@ func (s *KeyValueStorage) Get(ctx context.Context, id int64) (*models.KeyValue, 
 }
 
 // List returns a slice of the data.
-func (s *KeyValueStorage) List(ctx context.Context, UserID, limit, offset int64) ([]models.KeyValue, error) {
+func (s *KeyValueStorage) List(ctx context.Context, userID, limit, offset int64) ([]models.KeyValue, error) {
+	s.m.RLock()
+	defer s.m.RUnlock()
 
-	return nil, nil
+	// define upper limits
+	length := len(s.keyValue[userID])
+	if limit > int64(length) {
+		limit = int64(length)
+	}
+	if offset > int64(length) {
+		offset = int64(length)
+	}
+
+	keys := s.sortKeyValue(userID)
+	n := 0
+	var slice []models.KeyValue
+	for _, i := range keys {
+		// take items only from offset
+		if n >= int(offset) {
+			slice = append(slice, s.keyValue[userID][i])
+		}
+		n++
+		// take limited items from offset and stop
+		if n-int(offset) == int(limit) {
+			break
+		}
+	}
+
+	return slice, nil
 }
 
 // Update updates a row of the data.
 func (s *KeyValueStorage) Update(ctx context.Context, model models.KeyValue) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	s.keyValue[model.UserID][model.ID] = model
 
 	return nil
 }
 
 // Delete deletes a row of the data.
-func (s *KeyValueStorage) Delete(ctx context.Context, UserID, id int64) error {
+func (s *KeyValueStorage) Delete(ctx context.Context, userID, id int64) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	keys := s.sortKeyValue(userID)
+	slice := make(map[int64]models.KeyValue, len(keys)-1) // del: new slice len(keys)-1
+	for _, i := range keys {
+		if i == id {
+			continue
+		}
+		slice[i] = s.keyValue[userID][i]
+	}
+	// init new slice without a deleted item
+	s.keyValue[userID] = make(map[int64]models.KeyValue, len(slice))
+	s.keyValue[userID] = slice
 
 	return nil
 }
@@ -88,4 +133,17 @@ func (s *KeyValueStorage) getContextUserID(ctx context.Context) int64 {
 	default:
 		return -1
 	}
+}
+
+func (s *KeyValueStorage) sortKeyValue(userID int64) []int64 {
+	length := len(s.keyValue[userID])
+	keys := make([]int64, length)
+	n := 0
+	for k := range s.keyValue[userID] {
+		keys[n] = k
+		n++
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+
+	return keys
 }
