@@ -1,0 +1,14 @@
+package middleware
+
+import (
+	"context"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/webkimru/go-keeper/pkg/logger"
+)
+
+// InterceptorLogger is an advanced logging interceptor
+func InterceptorLogger(l *logger.Log) logging.Logger {
+	return logging.LoggerFunc(func(ctx context.Context, lvl logging.Level, msg string, fields ...any) {
+		l.Log.Infoln(msg, fields)
+	})
+}
