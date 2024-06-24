@@ -2,7 +2,11 @@
 // This package contains Zap Logger that implements Logger interface of this package.
 package logger
 
-import "go.uber.org/zap"
+import (
+	"go.uber.org/zap"
+)
+
+const _defaultLogLevel = "info"
 
 // Logger is the logging interface.
 // Third party logger should implement it.
@@ -20,13 +24,23 @@ type Logger interface {
 
 // Log contains a logger.
 type Log struct {
-	Log Logger
+	Log    Logger
+	Level  string
+	Output []string
 }
 
 // NewZap implements zsp logger.
-func NewZap(level string) (*Log, error) {
+func NewZap(opts ...Option) (*Log, error) {
+	l := &Log{
+		Level:  _defaultLogLevel,
+		Output: []string{"stderr"}, // "path_to_logfile"
+	}
+	// Custom options
+	for _, opt := range opts {
+		opt(l)
+	}
 	// transforms to zap.AtomicLevel
-	lvl, err := zap.ParseAtomicLevel(level)
+	lvl, err := zap.ParseAtomicLevel(l.Level)
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +48,8 @@ func NewZap(level string) (*Log, error) {
 	cfg := zap.NewProductionConfig()
 	// sets a level
 	cfg.Level = lvl
+	// save to file
+	cfg.OutputPaths = l.Output
 	// creates s new logger with defined configuration
 	zl, err := cfg.Build()
 	if err != nil {

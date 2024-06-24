@@ -18,7 +18,9 @@ import (
 
 // Run runs application.
 func Run(cfg *config.Config) {
-	l, err := logger.NewZap(cfg.Log.Level)
+	l, err := logger.NewZap(
+		logger.SetLevel(cfg.Log.Level),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

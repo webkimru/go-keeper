@@ -30,3 +30,7 @@ func MsgInternalServerError(err error) string {
 func MsgFieldRequiredError(err error) string {
 	return fmt.Sprintf("%v", err)
 }
+
+func MsgCLI(s string) {
+	fmt.Printf("%serror: %s%s\n", "\033[31m", s, "\033[0m")
+}
