@@ -16,7 +16,7 @@ func TestNewZap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewZap(tt.level)
+			_, err := NewZap(SetLevel(tt.level))
 			if (err != nil) != tt.wantErr {
 				assert.NoError(t, err)
 			}
