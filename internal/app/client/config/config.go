@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
@@ -22,6 +21,7 @@ type (
 		BuildDate    string `json:"build_date" env:"APP_BUILD_COMMIT"`
 		SecretKey    string `json:"secret_key" env:"APP_SECRET_KEY" env-default:"secret"`
 		TokenExp     int    `json:"token_exp" env:"APP_TOKEN_EXP" env-default:"120" env-description:"token expiration (minutes)"`
+		Token        string `json:"token" env:"APP_TOKEN"`
 	}
 
 	// Log is a logging structure.
@@ -38,26 +38,23 @@ type (
 
 	// SQLite is a SQLite structure.
 	SQLite struct {
-		DatabaseDSN      string `json:"database_dsn" env:"DATABASE_DSN"`
+		DatabaseDSN      string `json:"database_dsn" env:"DATABASE_DSN" env-default:"client.db"`
 		MigrationVersion int64  `json:"migration_version" env:"DB_MIGRATION_VERSION" env-default:"1"`
 		PingInterval     int    `json:"ping_interval" env:"DB_PING_INTERVAL" env-default:"1"`
-		DataSourcePath   string `json:"data_source_path" env:"DB_SOURCE_PATH" env-default:"client.db"`
+		QueryTimeout     int    `json:"query_timeout" env:"DB_QUERY_TIMEOUT" env-default:"5"`
 	}
 )
-
-// Args command-line parameters.
-type Args struct {
-	ConfigPath string
-	Version    bool
-}
 
 // New returns app config.
 func New() (*Config, error) {
 	var cfg Config
 
+	// Read config from file
+	_ = cleanenv.ReadConfig("config.json", &cfg) // silent loading config with token after auth
+
 	// Read config from ENV
 	if err := cleanenv.ReadEnv(&cfg); err != nil {
-		return nil, fmt.Errorf("config - New - cleanenv.ReadEnv(): %w", err)
+		return nil, err
 	}
 
 	return &cfg, nil

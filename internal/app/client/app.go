@@ -8,6 +8,7 @@ import (
 	"github.com/webkimru/go-keeper/internal/app/client/config"
 	sqliteStore "github.com/webkimru/go-keeper/internal/app/client/repository/store/sqlite"
 	"github.com/webkimru/go-keeper/internal/app/client/service"
+	"github.com/webkimru/go-keeper/pkg/jwtmanager"
 	"github.com/webkimru/go-keeper/pkg/logger"
 	"github.com/webkimru/go-keeper/pkg/sqlite"
 )
@@ -23,8 +24,9 @@ func Run(cfg *config.Config) {
 	}
 
 	l.Log.Infoln("Starting configuration:",
-		"APP_SECRET_KEY", cfg.SecretKey,
-		"APP_TOKEN_EXP", cfg.TokenExp,
+		"APP_TOKEN", cfg.Token,
+		"APP_SECRET_KEY", cfg.App.SecretKey,
+		"APP_TOKEN_EXP", cfg.App.TokenExp,
 		"LOG_LEVEL", cfg.Log.Level,
 		"GRPC_ADDRESS", cfg.GRPC.Address,
 		"DATABASE_DSN", cfg.SQLite.DatabaseDSN,
@@ -33,7 +35,7 @@ func Run(cfg *config.Config) {
 
 	db, err := sqlite.New(
 		sqlite.PingInterval(cfg.SQLite.PingInterval),
-		sqlite.DataSourcePath(cfg.SQLite.DataSourcePath),
+		sqlite.DataSourcePath(cfg.SQLite.DatabaseDSN),
 	)
 	if err != nil {
 		l.Log.Errorf("app - client - Run - sqlite.New()", err)
@@ -45,10 +47,12 @@ func Run(cfg *config.Config) {
 	l.Log.Infof("Initiating gRPC client on %s", cfg.GRPC.Address)
 	client := grpc.NewClient(cfg, l)
 
+	jwtManager := jwtmanager.New(cfg.SecretKey, cfg.TokenExp)
 	userService := service.NewUserService(
 		sqliteStore.NewUserStorage(db, cfg),
 		client,
 		cfg,
+		jwtManager,
 		l,
 	)
 

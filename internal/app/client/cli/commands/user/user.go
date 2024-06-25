@@ -1,7 +1,8 @@
-package commands
+package user
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/webkimru/go-keeper/internal/app/client/service"
@@ -21,6 +22,7 @@ func NewUserCommand(userService *service.UserService, log *logger.Log) *cobra.Co
 	}
 
 	userCmd.AddCommand(NewUserNewCommand(userService, log))
+	userCmd.AddCommand(NewUserLoginCommand(userService, log))
 
 	return &userCmd
 }

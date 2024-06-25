@@ -7,5 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TEXT
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS user_idx ON users (login);
+
 -- +goose Down
 DROP TABLE users;

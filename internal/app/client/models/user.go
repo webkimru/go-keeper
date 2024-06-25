@@ -5,11 +5,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	UserStatePending    = "PENDING"
+	UserStateRegistered = "REGISTERED"
+)
+
 // User contains user's information.
 type User struct {
 	ID        int64
 	Login     string
 	Password  string
+	Status    string
 	CreatedAt string
 }
 
