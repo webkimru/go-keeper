@@ -10,6 +10,11 @@ import (
 	"github.com/webkimru/go-keeper/pkg/logger"
 )
 
+const (
+	_defaultRecordsLimit  = 100
+	_defaultRecordsOffset = 0
+)
+
 // KeyValueStore is an interface to store data.
 type KeyValueStore interface {
 	Add(ctx context.Context, model models.KeyValue) error
@@ -85,17 +90,19 @@ func (s *KeyValueService) Get(ctx context.Context, id int64) (*models.KeyValue, 
 }
 
 // List returns a slice of the data.
-func (s *KeyValueService) List(ctx context.Context, userID, limit, offset int64) ([]models.KeyValue, error) {
+func (s *KeyValueService) List(ctx context.Context) ([]models.KeyValue, error) {
+	model := models.KeyValue{}
+	userID := model.GetContextUserID(ctx)
+	if userID == -1 {
+		return nil, fmt.Errorf("KeyValueService - Add - model.GetContextUserID(): %w", errs.ErrPermissionDenied)
+	}
+	model.UserID = userID
 	// validate
-	model := models.KeyValue{UserID: userID}
 	if field, err := model.Validate("user_id"); err != nil {
 		return nil, fmt.Errorf("KeyValueService - List - model.Validate(): %w: %s is required", errs.ErrBadRequest, field)
 	}
-	if limit == 0 {
-		return nil, fmt.Errorf("KeyValueService - List: %w: limit must be > 0", errs.ErrBadRequest)
-	}
 
-	data, err := s.storage.List(ctx, userID, limit, offset)
+	data, err := s.storage.List(ctx, userID, _defaultRecordsLimit, _defaultRecordsOffset)
 	if err != nil {
 		return nil, fmt.Errorf("KeyValueService - List - s.storage.List(): %w", err)
 	}

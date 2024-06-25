@@ -79,18 +79,34 @@ func (s *KeyValueStorage) List(ctx context.Context, id, limit, offset int64) ([]
 	newCtx, cancel := context.WithTimeout(ctx, s.queryTimeout)
 	defer cancel()
 
-	_, err := s.DB.QueryContext(newCtx, `
-		SELECT (id, user_id, title, key, value)
+	rows, err := s.DB.QueryContext(newCtx, `
+		SELECT id, title, key, value
 			FROM keyvalues
 				WHERE user_id = $1
 					LIMIT $2 OFFSET $3`, id, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("sqlite - KeyValueStorage - List() - s.DB.Query(): %w", err)
 	}
+	defer rows.Close()
 
-	// TODO: list
+	var data []models.KeyValue
+	for rows.Next() {
+		var id int64
+		var title, key, value string
+		err = rows.Scan(&id, &title, &key, &value)
+		if err != nil {
+			return nil, fmt.Errorf("sqlite - KeyValueStorage - List() - rows.Scan(): %w", err)
+		}
 
-	return nil, nil
+		data = append(data, models.KeyValue{
+			ID:    id,
+			Title: title,
+			Key:   key,
+			Value: value,
+		})
+	}
+
+	return data, nil
 }
 
 // Update updates a row of the data.
