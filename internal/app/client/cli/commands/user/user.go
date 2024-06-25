@@ -16,7 +16,7 @@ func NewUserCommand(userService *service.UserService, log *logger.Log) *cobra.Co
 		Short: "Manage users",
 		Long:  "Use subcommands to manage the users",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("to control use this command: user new")
+			fmt.Println("to control use this subcommand: user [add] or [login]")
 
 		},
 	}

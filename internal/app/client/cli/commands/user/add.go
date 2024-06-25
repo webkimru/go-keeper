@@ -16,7 +16,7 @@ import (
 // NewUserNewCommand represents the initialized create user command
 func NewUserNewCommand(userService *service.UserService, l *logger.Log) *cobra.Command {
 	return &cobra.Command{
-		Use:   "new",
+		Use:   "add",
 		Short: "Creator new user",
 		Long:  "Allows creating a new user with login and password",
 		Run: func(cmd *cobra.Command, args []string) {

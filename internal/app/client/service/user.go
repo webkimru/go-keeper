@@ -62,7 +62,7 @@ func (s *UserService) Add(ctx context.Context, model *models.User) error {
 		return fmt.Errorf("UserService - Add - models.NewUser(): %w", err)
 	}
 	// create a new status
-	user.Status = models.UserStatePending
+	user.Status = models.UserStateNew
 	// save to the store
 	if err = s.storage.Add(ctx, user); err != nil {
 		if errors.Is(err, errs.ErrAlreadyExists) {

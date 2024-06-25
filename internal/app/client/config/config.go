@@ -39,7 +39,7 @@ type (
 	// SQLite is a SQLite structure.
 	SQLite struct {
 		DatabaseDSN      string `json:"database_dsn" env:"DATABASE_DSN" env-default:"client.db"`
-		MigrationVersion int64  `json:"migration_version" env:"DB_MIGRATION_VERSION" env-default:"1"`
+		MigrationVersion int64  `json:"migration_version" env:"DB_MIGRATION_VERSION" env-default:"2"`
 		PingInterval     int    `json:"ping_interval" env:"DB_PING_INTERVAL" env-default:"1"`
 		QueryTimeout     int    `json:"query_timeout" env:"DB_QUERY_TIMEOUT" env-default:"5"`
 	}

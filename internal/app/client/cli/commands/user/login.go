@@ -21,10 +21,10 @@ func NewUserLoginCommand(userService *service.UserService, l *logger.Log) *cobra
 		Long:  "Allows logging the user by login and password",
 		Run: func(cmd *cobra.Command, args []string) {
 			login, err := readString("Login: ")
-			CLIog(l, "commands - NewUserLoginCommand - login - readString(): %w", err)
+			CLIog(l, "commands - NewUserLoginCommand - readString(login): %w", err)
 
 			password, err := readString("Password: ")
-			CLIog(l, "commands - NewUserLoginCommand - password - readString(): %w", err)
+			CLIog(l, "commands - NewUserLoginCommand - readString(password): %w", err)
 
 			token, err := userService.Auth(context.Background(), login, password)
 			if err != nil {

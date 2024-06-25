@@ -1,10 +1,12 @@
 package commands
 
 import (
+	"context"
 	"os"
 
 	"github.com/spf13/cobra"
 
+	"github.com/webkimru/go-keeper/internal/app/client/cli/commands/data"
 	"github.com/webkimru/go-keeper/internal/app/client/cli/commands/user"
 	"github.com/webkimru/go-keeper/internal/app/client/config"
 	"github.com/webkimru/go-keeper/internal/app/client/service"
@@ -13,7 +15,13 @@ import (
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute(userService *service.UserService, cfg *config.Config, log *logger.Log) {
+func Execute(
+	ctx context.Context,
+	userService *service.UserService,
+	keyValueService *service.KeyValueService,
+	cfg *config.Config,
+	log *logger.Log,
+) {
 	// rootCmd represents the base command when called without any subcommands
 	var rootCmd = &cobra.Command{
 		Use:   "go-keeper",
@@ -21,6 +29,7 @@ func Execute(userService *service.UserService, cfg *config.Config, log *logger.L
 		Long:  "Go-keeper is a friendly command line application for safe keeping key-value data",
 	}
 	rootCmd.AddCommand(user.NewUserCommand(userService, log))
+	rootCmd.AddCommand(data.NewKeyValueCommand(ctx, keyValueService, log))
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)

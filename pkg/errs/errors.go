@@ -44,8 +44,16 @@ func CLIMsgAlreadyExists() {
 	printColorRed(MsgAlreadyExists)
 }
 
+func CLIMsgBadRequest() {
+	printColorRed(MsgFieldRequired)
+}
+
 func CLIMsgInvalidCredentials() {
 	printColorRed(MsgInvalidCred)
+}
+
+func CLIMsgPermissionDenied() {
+	printColorRed(MsgPermissionDenied)
 }
 
 func CLIMsgSeeLog() {

@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	UserStatePending    = "PENDING"
-	UserStateRegistered = "REGISTERED"
+	UserStateNew       = "NEW"
+	UserStateProcessed = "PROCESSED"
 )
 
 // User contains user's information.
@@ -39,6 +39,7 @@ func (user *User) ValidPassword(password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) == nil
 }
 
+// Validate checks formed data.
 func (user *User) Validate(required ...string) (string, error) {
 	for _, field := range required {
 		if !user.valid(field) {

@@ -80,7 +80,7 @@ func (s *UserStorage) Update(ctx context.Context, user *models.User) error {
 	defer cancel()
 
 	row := s.DB.QueryRowContext(newCtx, `
-		UPDATE users SET status = $1 WHERE login = $2`, models.UserStateRegistered, user.Login)
+		UPDATE users SET status = $1 WHERE login = $2`, models.UserStateProcessed, user.Login)
 
 	err := row.Err()
 	if err != nil {

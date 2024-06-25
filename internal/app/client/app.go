@@ -1,13 +1,16 @@
 package client
 
 import (
+	"context"
 	"log"
 
 	"github.com/webkimru/go-keeper/internal/app/client/cli/commands"
 	"github.com/webkimru/go-keeper/internal/app/client/cli/grpc"
 	"github.com/webkimru/go-keeper/internal/app/client/config"
+	"github.com/webkimru/go-keeper/internal/app/client/models"
 	sqliteStore "github.com/webkimru/go-keeper/internal/app/client/repository/store/sqlite"
 	"github.com/webkimru/go-keeper/internal/app/client/service"
+	"github.com/webkimru/go-keeper/pkg/crypt"
 	"github.com/webkimru/go-keeper/pkg/jwtmanager"
 	"github.com/webkimru/go-keeper/pkg/logger"
 	"github.com/webkimru/go-keeper/pkg/sqlite"
@@ -47,7 +50,9 @@ func Run(cfg *config.Config) {
 	l.Log.Infof("Initiating gRPC client on %s", cfg.GRPC.Address)
 	client := grpc.NewClient(cfg, l)
 
+	// jwtManager saving a token to the app config and reusing it in the commands
 	jwtManager := jwtmanager.New(cfg.SecretKey, cfg.TokenExp)
+	// userService business logic layer above the commands
 	userService := service.NewUserService(
 		sqliteStore.NewUserStorage(db, cfg),
 		client,
@@ -56,7 +61,26 @@ func Run(cfg *config.Config) {
 		l,
 	)
 
-	commands.Execute(userService, cfg, l)
+	// set context value after getting the token
+	ctx := context.Background()
+	if cfg.App.Token != "" {
+		userID := jwtManager.GetUserID(cfg.App.Token)
+		if userID != -1 {
+			ctx = context.WithValue(ctx, models.ContextKey("userID"), userID)
+		}
+	}
+	// cryptManager to encrypt local key-value data
+	cryptManager, err := crypt.New(cfg.SecretKey)
+	if err != nil {
+		l.Log.Error(err)
+	}
+	keyValueService := service.NewKeyValueService(
+		sqliteStore.NewKeyValueStorage(db, cfg),
+		cryptManager,
+		l,
+	)
+
+	commands.Execute(ctx, userService, keyValueService, cfg, l)
 
 	err = client.Close()
 	if err != nil {
