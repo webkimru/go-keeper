@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	UserStateNew       = "NEW"
-	UserStateProcessed = "PROCESSED"
+	UserStateNew       = "NEW"       // initial status
+	UserStateProcessed = "PROCESSED" // synced status
 )
 
 // User contains user's information.

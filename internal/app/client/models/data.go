@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	KeyValueStateNew       = "NEW"
-	KeyValueStateProcessed = "PROCESSED"
+	KeyValueStateNew       = "NEW"       // initial status
+	KeyValueStateProcessed = "PROCESSED" // synced status
 )
 
 // KeyValue contains key-value entity information.

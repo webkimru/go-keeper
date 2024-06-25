@@ -24,6 +24,7 @@ func NewKeyValueCommand(ctx context.Context, keyValueService *service.KeyValueSe
 	}
 
 	dataCmd.AddCommand(NewKeyValueAddCommand(ctx, keyValueService, log))
+	dataCmd.AddCommand(NewKeyValueUpdCommand(ctx, keyValueService, log))
 
 	return &dataCmd
 }

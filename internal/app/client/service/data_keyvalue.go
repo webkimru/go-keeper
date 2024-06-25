@@ -35,7 +35,7 @@ func NewKeyValueService(storage KeyValueStore, cryptManager *crypt.Crypt, l *log
 func (s *KeyValueService) Add(ctx context.Context, model models.KeyValue) error {
 	userID := model.GetContextUserID(ctx)
 	if userID == -1 {
-		return fmt.Errorf("KeyValueService - Add - model.Auth(): %w", errs.ErrPermissionDenied)
+		return fmt.Errorf("KeyValueService - Add - model.GetContextUserID(): %w", errs.ErrPermissionDenied)
 	}
 
 	if field, err := model.Validate("title", "key", "value"); err != nil {
@@ -119,10 +119,16 @@ func (s *KeyValueService) List(ctx context.Context, userID, limit, offset int64)
 
 // Update updates a row of the data.
 func (s *KeyValueService) Update(ctx context.Context, model models.KeyValue) error {
+	userID := model.GetContextUserID(ctx)
+	if userID == -1 {
+		return fmt.Errorf("KeyValueService - Update - model.GetContextUserID(): %w", errs.ErrPermissionDenied)
+	}
+
 	if field, err := model.Validate("id", "title", "key", "value"); err != nil {
 		return fmt.Errorf("KeyValueService - Update - model.Validate(): %w: %s is required", errs.ErrBadRequest, field)
 	}
 
+	model.UserID = userID
 	// encrypt
 	model.Key = s.cryptManager.Encrypt(model.Key)
 	model.Value = s.cryptManager.Encrypt(model.Value)
