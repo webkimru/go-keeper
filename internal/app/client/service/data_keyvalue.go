@@ -141,9 +141,15 @@ func (s *KeyValueService) Update(ctx context.Context, model models.KeyValue) err
 }
 
 // Delete deletes a row of the data.
-func (s *KeyValueService) Delete(ctx context.Context, userID, id int64) error {
+func (s *KeyValueService) Delete(ctx context.Context, id int64) error {
+	model := models.KeyValue{ID: id}
+	userID := model.GetContextUserID(ctx)
+	if userID == -1 {
+		return fmt.Errorf("KeyValueService - Update - model.GetContextUserID(): %w", errs.ErrPermissionDenied)
+	}
+	model.UserID = userID
+
 	// validate
-	model := models.KeyValue{ID: id, UserID: userID}
 	if field, err := model.Validate("user_id", "id"); err != nil {
 		return fmt.Errorf("KeyValueService - Delete - model.Validate(): %w: %s is required", errs.ErrBadRequest, field)
 	}

@@ -7,6 +7,10 @@
 # Binaries
 cmd/server/server
 cmd/client/client
+# Client
+*.db
+*.log
+config.json
 
 # Dependency directories (remove the comment below to include it)
 vendor/
