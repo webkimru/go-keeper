@@ -17,11 +17,9 @@ import (
 )
 
 func TestUserServer_Register(t *testing.T) {
-	userService := service.NewUserService(inmemory.NewUserStorage())
-	s := &UserServer{
-		userService: userService,
-		jwtManager:  jwtmanager.New("secret", 1),
-	}
+	jwtManager := jwtmanager.New("secret", 1)
+	userService := service.NewUserService(inmemory.NewUserStorage(), jwtManager)
+	s := &UserServer{userService: userService}
 	tests := []struct {
 		name     string
 		in       *pb.RegisterRequest
@@ -60,8 +58,9 @@ func TestUserServer_Register(t *testing.T) {
 }
 
 func TestUserServer_Login(t *testing.T) {
-	nousers := service.NewUserService(inmemory.NewUserStorage())
-	withuser := service.NewUserService(inmemory.NewUserStorage())
+	jwtManager := jwtmanager.New("secret", 1)
+	nousers := service.NewUserService(inmemory.NewUserStorage(), jwtManager)
+	withuser := service.NewUserService(inmemory.NewUserStorage(), jwtManager)
 	err := withuser.Add(context.Background(), &models.User{
 		Login:    "test",
 		Password: "test",
@@ -109,10 +108,7 @@ func TestUserServer_Login(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &UserServer{
-				userService: tt.store,
-				jwtManager:  jwtmanager.New("secret", 1),
-			}
+			s := &UserServer{userService: tt.store}
 
 			got, err := s.Login(context.Background(), tt.in)
 			if tt.wantCode == codes.OK {

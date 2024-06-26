@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"github.com/webkimru/go-keeper/internal/app/server/models"
 	"github.com/webkimru/go-keeper/pkg/errs"
+	"github.com/webkimru/go-keeper/pkg/jwtmanager"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 //go:generate mockgen -destination=mocks/mock_user.go -package=mocks github.com/webkimru/go-keeper/internal/app/server/service UserStore
@@ -17,12 +20,13 @@ type UserStore interface {
 
 // UserService contains a user storage.
 type UserService struct {
-	storage UserStore
+	jwtManager *jwtmanager.JWTManager
+	storage    UserStore
 }
 
 // NewUserService return a new user service with storage.
-func NewUserService(storage UserStore) *UserService {
-	return &UserService{storage: storage}
+func NewUserService(storage UserStore, jwtManager *jwtmanager.JWTManager) *UserService {
+	return &UserService{storage: storage, jwtManager: jwtManager}
 }
 
 // Add puts a user to the storage.
@@ -44,16 +48,25 @@ func (s *UserService) Add(ctx context.Context, model *models.User) error {
 }
 
 // Find returns an existing user.
-func (s *UserService) Find(ctx context.Context, login, password string) (*models.User, error) {
+func (s *UserService) Find(ctx context.Context, login, password string) (string, error) {
 	model := models.User{Login: login, Password: password}
 	if field, err := model.Validate("login", "password"); err != nil {
-		return nil, fmt.Errorf("UserService - Find - model.Validate(): %w: %s is required", errs.ErrBadRequest, field)
+		return "", fmt.Errorf("UserService - Find - model.Validate(): %w: %s is required", errs.ErrBadRequest, field)
 	}
 
 	user, err := s.storage.Find(ctx, login)
 	if err != nil {
-		return nil, fmt.Errorf("UserService - Find - s.storage.Find(): %w", err)
+		return "", fmt.Errorf("UserService - Find - s.storage.Find(): %w", err)
 	}
 
-	return user, nil
+	if user == nil || !user.ValidPassword(password) {
+		return "", fmt.Errorf("UserService - Find - user.ValidPassword(): %w", errs.ErrInvalidCredentials)
+	}
+
+	token, err := s.jwtManager.BuildJWTString(user.ID)
+	if err != nil {
+		return "", status.Errorf(codes.Internal, errs.MsgInternalServerError(err))
+	}
+
+	return token, nil
 }

@@ -22,10 +22,7 @@ func New(
 	l *logger.Log,
 ) *grpcserver.Server {
 	// user server description
-	userServer := NewUserServer(
-		userService,
-		jwtManager,
-	)
+	userServer := NewUserServer(userService)
 	// key-value server description
 	keyValueServer := NewKeyValueServer(keyValueService)
 	interceptor := middleware.NewAuthInterceptor(jwtManager)
