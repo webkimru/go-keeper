@@ -48,14 +48,15 @@ func Run(cfg *config.Config) {
 	}
 
 	l.Log.Infof("Initiating gRPC client on %s", cfg.GRPC.Address)
-	client := grpc.NewClient(cfg, l)
+	gRPC := grpc.NewClient(cfg, l)                     // gRPC client with tcp, host, port
+	userClient := grpc.NewUserClient(gRPC.Client, cfg) // gRPC unary user client
 
 	// jwtManager saving a token to the app config and reusing it in the commands
 	jwtManager := jwtmanager.New(cfg.SecretKey, cfg.TokenExp)
 	// userService business logic layer above the commands
 	userService := service.NewUserService(
 		sqliteStore.NewUserStorage(db, cfg),
-		client,
+		userClient,
 		cfg,
 		jwtManager,
 		l,
@@ -82,9 +83,8 @@ func Run(cfg *config.Config) {
 
 	commands.Execute(ctx, userService, keyValueService, cfg, l)
 
-	err = client.Close()
+	err = gRPC.Close()
 	if err != nil {
 		l.Log.Errorf("app - client - Run - client.Close()", err)
 	}
-
 }

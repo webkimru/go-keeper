@@ -10,10 +10,11 @@ import (
 	"github.com/webkimru/go-keeper/internal/app/client/config"
 	"github.com/webkimru/go-keeper/internal/app/client/models"
 	"github.com/webkimru/go-keeper/pkg/errs"
-	"github.com/webkimru/go-keeper/pkg/grpcserver/client"
 	"github.com/webkimru/go-keeper/pkg/jwtmanager"
 	"github.com/webkimru/go-keeper/pkg/logger"
 )
+
+//go:generate mockgen -destination=mocks/mock_user.go -package=mocks . UserStore
 
 // UserStore is an interface to store users.
 type UserStore interface {
@@ -24,7 +25,7 @@ type UserStore interface {
 
 // UserService is a service to save data and do gRPC requests.
 type UserService struct {
-	gRPC       *client.Client
+	gRPC       *grpc.UserClient
 	cfg        *config.Config
 	logger     *logger.Log
 	jwtManager *jwtmanager.JWTManager
@@ -34,7 +35,7 @@ type UserService struct {
 // NewUserService returns a new user service with needed options.
 func NewUserService(
 	storage UserStore,
-	client *client.Client,
+	client *grpc.UserClient,
 	cfg *config.Config,
 	jwtManager *jwtmanager.JWTManager,
 	l *logger.Log,
@@ -46,8 +47,7 @@ func NewUserService(
 func (s *UserService) Add(ctx context.Context, model *models.User) error {
 	// 1. Puts a new user to the go-keeper server:
 	// do request to the server using the client
-	gRPClient := grpc.NewUserClient(s.gRPC.Client, s.cfg)
-	res, err := gRPClient.Register(model)
+	res, err := s.gRPC.Register(model)
 	if err != nil {
 		return fmt.Errorf("service - Add - userClient.Register(): %w", err)
 	}

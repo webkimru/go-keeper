@@ -10,6 +10,8 @@ import (
 	"github.com/webkimru/go-keeper/pkg/logger"
 )
 
+//go:generate mockgen -destination=mocks/mock_keyvalue.go -package=mocks . KeyValueStore
+
 const (
 	_defaultRecordsLimit  = 100
 	_defaultRecordsOffset = 0
