@@ -74,11 +74,14 @@ func TestUserService_Add(t *testing.T) {
 func TestUserService_Find(t *testing.T) {
 	ctx, m := testSetupUserService(t)
 
+	errStore := errors.New("an error")
+
 	m.EXPECT().Find(ctx, "login").Return(&models.User{
 		ID:       1,
 		Login:    "login",
 		Password: "pass",
 	}, nil)
+	m.EXPECT().Find(ctx, "login2").Return(nil, errStore)
 
 	tests := []struct {
 		name    string
@@ -91,6 +94,18 @@ func TestUserService_Find(t *testing.T) {
 			ctx,
 			"login",
 			false,
+		},
+		{
+			"negative: empty data",
+			ctx,
+			"",
+			true,
+		},
+		{
+			"negative: store error",
+			ctx,
+			"login2",
+			true,
 		},
 	}
 	for _, tt := range tests {
