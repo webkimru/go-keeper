@@ -129,18 +129,21 @@ func TestKeyValueService_List(t *testing.T) {
 			Key: "df0c76be5b07aee90dd132c0103722ebb99c60c6a9",
 		},
 	}, nil)
+	m.EXPECT().List(ctx, int64(0), int64(0), int64(0)).Return(nil, nil)
 
 	tests := []struct {
 		name    string
+		userID  int64
 		limit   int64
 		Error   error
 		wantErr bool
 	}{
-		{"positive: correct data", 1, nil, false},
-		{"negative: arg limit 0", 0, errs.ErrBadRequest, true},
-		{"negative: store error", 2, errCustom, true},
-		{"negative: key encrypt", 3, errCustom, true},
-		{"negative: value encrypt", 4, errCustom, true},
+		{"positive: correct data", 1, 1, nil, false},
+		{"negative: arg limit 0", 1, 0, errs.ErrBadRequest, true},
+		{"negative: store error", 1, 2, errCustom, true},
+		{"negative: key encrypt", 1, 3, errCustom, true},
+		{"negative: value encrypt", 1, 4, errCustom, true},
+		{"negative: wrong user", 0, 0, errCustom, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -148,7 +151,7 @@ func TestKeyValueService_List(t *testing.T) {
 				storage:      m,
 				cryptManager: cryptManager,
 			}
-			_, err := s.List(ctx, 1, tt.limit, 0)
+			_, err := s.List(ctx, tt.userID, tt.limit, 0)
 			if (err != nil) != tt.wantErr {
 				assert.Error(t, err)
 				assert.ErrorIs(t, err, tt.Error)
@@ -222,7 +225,8 @@ func TestKeyValueService_Delete(t *testing.T) {
 	errStore := errors.New("an error")
 
 	m.EXPECT().Delete(ctx, int64(1), int64(1)).Return(nil)
-	m.EXPECT().Delete(ctx, int64(1), int64(0)).Return(errStore)
+	m.EXPECT().Delete(ctx, int64(1), int64(0)).Return(nil)
+	m.EXPECT().Delete(ctx, int64(1), int64(2)).Return(errStore)
 
 	tests := []struct {
 		name    string
@@ -230,7 +234,8 @@ func TestKeyValueService_Delete(t *testing.T) {
 		wantErr bool
 	}{
 		{"positive: correct data", 1, false},
-		{"negative: store error", 0, true},
+		{"negative: invalid user", 0, true},
+		{"negative: store error", 2, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
