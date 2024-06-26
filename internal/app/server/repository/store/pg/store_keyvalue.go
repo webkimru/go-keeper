@@ -103,11 +103,11 @@ func (s *KeyValueStorage) Update(ctx context.Context, model models.KeyValue) err
 	newCtx, cancel := context.WithTimeout(ctx, s.queryTimeout)
 	defer cancel()
 
-	tx, err := s.db.Pool.Begin(ctx)
+	tx, err := s.db.Pool.Begin(newCtx)
 	if err != nil {
 		return fmt.Errorf("pg - KeyValueStorage - Update() - s.db.Pool.Begin(): %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(newCtx)
 
 	res := tx.QueryRow(newCtx, `
 		UPDATE keyvalues SET title = $1, key = $2, value = $3
@@ -129,7 +129,7 @@ func (s *KeyValueStorage) Update(ctx context.Context, model models.KeyValue) err
 		return fmt.Errorf("pg - KeyValueStorage - Update() - dbUserID is not equal model.UserID: %w", errs.ErrPermissionDenied)
 	}
 
-	return tx.Commit(ctx)
+	return tx.Commit(newCtx)
 }
 
 // Delete deletes a row of the data.
