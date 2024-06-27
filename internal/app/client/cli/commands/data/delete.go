@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"io"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -12,13 +13,13 @@ import (
 )
 
 // NewKeyValueDelCommand represents the initialized delete key-value command
-func NewKeyValueDelCommand(ctx context.Context, keyValueService *service.KeyValueService, l *logger.Log) *cobra.Command {
+func NewKeyValueDelCommand(ctx context.Context, in io.Reader, keyValueService *service.KeyValueService, l *logger.Log) *cobra.Command {
 	return &cobra.Command{
 		Use:   "del",
 		Short: "Deleter key-value data",
 		Long:  "Allows delete key-value data",
 		Run: func(cmd *cobra.Command, args []string) {
-			id, err := readInt("ID: ")
+			id, err := readInt(in, "ID: ")
 			CLIog(l, "commands - NewKeyValueDelCommand - readString(id): %w", err)
 
 			err = keyValueService.Delete(ctx, int64(id))

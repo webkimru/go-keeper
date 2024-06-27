@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -14,22 +15,22 @@ import (
 )
 
 // NewKeyValueUpdCommand represents the initialized update key-value command
-func NewKeyValueUpdCommand(ctx context.Context, keyValueService *service.KeyValueService, l *logger.Log) *cobra.Command {
+func NewKeyValueUpdCommand(ctx context.Context, in io.Reader, keyValueService *service.KeyValueService, l *logger.Log) *cobra.Command {
 	return &cobra.Command{
 		Use:   "upd",
 		Short: "Updater key-value data",
 		Long:  "Allows update key-value data",
 		Run: func(cmd *cobra.Command, args []string) {
-			id, err := readInt("ID: ")
+			id, err := readInt(in, "ID: ")
 			CLIog(l, "commands - NewKeyValueUpdCommand - readString(id): %w", err)
 
-			title, err := readString("Title: ")
+			title, err := readString(in, "Title: ")
 			CLIog(l, "commands - NewKeyValueUpdCommand - readString(title): %w", err)
 
-			key, err := readString("Key: ")
+			key, err := readString(in, "Key: ")
 			CLIog(l, "commands - NewKeyValueUpdCommand - readString(key): %w", err)
 
-			value, err := readString("Value: ")
+			value, err := readString(in, "Value: ")
 			CLIog(l, "commands - NewKeyValueUpdCommand - readString(value): %w", err)
 
 			data := models.KeyValue{ID: int64(id), Title: title, Key: key, Value: value}
@@ -53,13 +54,13 @@ func NewKeyValueUpdCommand(ctx context.Context, keyValueService *service.KeyValu
 }
 
 // readInt works as prompt UI
-func readInt(s string) (int, error) {
+func readInt(in io.Reader, s string) (int, error) {
 	var input int
 	for {
 		fmt.Print(s)
-		_, err := fmt.Scan(&input)
+		_, err := fmt.Fscanln(in, &input)
 		if err != nil {
-			return -1, fmt.Errorf("commands - readString - fmt.Scan(): %w", err)
+			return -1, fmt.Errorf("commands - readString - fmt.Fscanln(): %w", err)
 		}
 		if input != 0 {
 			break

@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/spf13/cobra"
 
@@ -11,7 +12,7 @@ import (
 )
 
 // NewKeyValueCommand represents the key-value data command init
-func NewKeyValueCommand(ctx context.Context, keyValueService *service.KeyValueService, log *logger.Log) *cobra.Command {
+func NewKeyValueCommand(ctx context.Context, in io.Reader, keyValueService *service.KeyValueService, log *logger.Log) *cobra.Command {
 	var dataCmd = cobra.Command{
 		Use:   "keyvalue",
 		Short: "Manage key-value",
@@ -23,9 +24,9 @@ func NewKeyValueCommand(ctx context.Context, keyValueService *service.KeyValueSe
 		},
 	}
 
-	dataCmd.AddCommand(NewKeyValueAddCommand(ctx, keyValueService, log))
-	dataCmd.AddCommand(NewKeyValueUpdCommand(ctx, keyValueService, log))
-	dataCmd.AddCommand(NewKeyValueDelCommand(ctx, keyValueService, log))
+	dataCmd.AddCommand(NewKeyValueAddCommand(ctx, in, keyValueService, log))
+	dataCmd.AddCommand(NewKeyValueUpdCommand(ctx, in, keyValueService, log))
+	dataCmd.AddCommand(NewKeyValueDelCommand(ctx, in, keyValueService, log))
 	dataCmd.AddCommand(NewKeyValueListCommand(ctx, keyValueService, log))
 
 	return &dataCmd

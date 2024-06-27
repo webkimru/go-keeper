@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/webkimru/go-keeper/internal/app/client/cli/commands"
 	"github.com/webkimru/go-keeper/internal/app/client/cli/grpc"
@@ -81,7 +82,10 @@ func Run(cfg *config.Config) {
 		l,
 	)
 
-	commands.Execute(ctx, userService, keyValueService, cfg, l)
+	cmd := commands.RootCommand(ctx, os.Stdin, userService, keyValueService, cfg, l)
+	if err = cmd.Execute(); err != nil {
+		l.Log.Errorf("app - client - Run - cmd.Execute()", err)
+	}
 
 	err = gRPC.Close()
 	if err != nil {

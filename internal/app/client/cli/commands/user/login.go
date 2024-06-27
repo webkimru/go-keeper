@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"io"
 	"os"
 	"strings"
 
@@ -14,16 +15,16 @@ import (
 )
 
 // NewUserLoginCommand represents the initialization for the login user command
-func NewUserLoginCommand(userService *service.UserService, l *logger.Log) *cobra.Command {
+func NewUserLoginCommand(in io.Reader, userService *service.UserService, l *logger.Log) *cobra.Command {
 	return &cobra.Command{
 		Use:   "login",
 		Short: "Login the user",
 		Long:  "Allows logging the user by login and password",
 		Run: func(cmd *cobra.Command, args []string) {
-			login, err := readString("Login: ")
+			login, err := readString(in, "Login: ")
 			CLIog(l, "commands - NewUserLoginCommand - readString(login): %w", err)
 
-			password, err := readString("Password: ")
+			password, err := readString(in, "Password: ")
 			CLIog(l, "commands - NewUserLoginCommand - readString(password): %w", err)
 
 			token, err := userService.Auth(context.Background(), login, password)

@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/pkg/errors"
@@ -15,19 +16,19 @@ import (
 )
 
 // NewKeyValueAddCommand represents the initialized create key-value command
-func NewKeyValueAddCommand(ctx context.Context, keyValueService *service.KeyValueService, l *logger.Log) *cobra.Command {
+func NewKeyValueAddCommand(ctx context.Context, in io.Reader, keyValueService *service.KeyValueService, l *logger.Log) *cobra.Command {
 	return &cobra.Command{
 		Use:   "add",
 		Short: "Creator new key-value",
 		Long:  "Allows creating a new ke-value data",
 		Run: func(cmd *cobra.Command, args []string) {
-			title, err := readString("Title: ")
+			title, err := readString(in, "Title: ")
 			CLIog(l, "commands - NewKeyValueAddCommand - readString(title): %w", err)
 
-			key, err := readString("Key: ")
+			key, err := readString(in, "Key: ")
 			CLIog(l, "commands - NewKeyValueAddCommand - readString(key): %w", err)
 
-			value, err := readString("Value: ")
+			value, err := readString(in, "Value: ")
 			CLIog(l, "commands - NewKeyValueAddCommand - readString(value): %w", err)
 
 			data := models.KeyValue{Title: title, Key: key, Value: value}
@@ -60,13 +61,13 @@ func CLIog(l *logger.Log, s string, err error) {
 }
 
 // readString works as prompt UI
-func readString(s string) (string, error) {
+func readString(in io.Reader, s string) (string, error) {
 	var input string
 	for {
 		fmt.Print(s)
-		_, err := fmt.Scan(&input)
+		_, err := fmt.Fscanln(in, &input)
 		if err != nil {
-			return "", fmt.Errorf("commands - readString - fmt.Scan(): %w", err)
+			return "", fmt.Errorf("commands - readString - fmt.Fscanln(): %w", err)
 		}
 		if input != "" {
 			break

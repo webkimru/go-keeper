@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -13,8 +14,8 @@ import (
 	"github.com/webkimru/go-keeper/pkg/logger"
 )
 
-// NewUserNewCommand represents the initialized create user command
-func NewUserNewCommand(userService *service.UserService, l *logger.Log) *cobra.Command {
+// NewUserAddCommand represents the initialized create user command
+func NewUserAddCommand(in io.Reader, userService *service.UserService, l *logger.Log) *cobra.Command {
 	return &cobra.Command{
 		Use:   "add",
 		Short: "Creator new user",
@@ -22,11 +23,11 @@ func NewUserNewCommand(userService *service.UserService, l *logger.Log) *cobra.C
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("To register a user, enter login and password.")
 
-			login, err := readString("Login: ")
-			CLIog(l, "commands - NewUserNewCommand - login - readString(): %w", err)
+			login, err := readString(in, "Login: ")
+			CLIog(l, "commands - NewUserAddCommand - login - readString(): %w", err)
 
-			password, err := readString("Password: ")
-			CLIog(l, "commands - NewUserNewCommand - password - readString(): %w", err)
+			password, err := readString(in, "Password: ")
+			CLIog(l, "commands - NewUserAddCommand - password - readString(): %w", err)
 
 			user := models.User{Login: login, Password: password}
 			err = userService.Add(context.Background(), &user)
@@ -36,7 +37,7 @@ func NewUserNewCommand(userService *service.UserService, l *logger.Log) *cobra.C
 					return
 				}
 
-				l.Log.Errorf("commands - NewUserNewCommand - userService.Add(): %w", err)
+				l.Log.Errorf("commands - NewUserAddCommand - userService.Add(): %w", err)
 				errs.CLIMsgSeeLog()
 				return
 			}
@@ -45,13 +46,13 @@ func NewUserNewCommand(userService *service.UserService, l *logger.Log) *cobra.C
 }
 
 // readString works as prompt UI
-func readString(s string) (string, error) {
+func readString(in io.Reader, s string) (string, error) {
 	var input string
 	for {
 		fmt.Print(s)
-		_, err := fmt.Scan(&input)
+		_, err := fmt.Fscanln(in, &input)
 		if err != nil {
-			return "", fmt.Errorf("commands - readString - fmt.Scan(): %w", err)
+			return "", fmt.Errorf("commands - readString - fmt.Fscanln(): %w", err)
 		}
 		if input != "" {
 			break
